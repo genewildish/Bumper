@@ -1,0 +1,47 @@
+name: Bumper
+options:
+  minimumXcodeGenVersion: 2.38.0
+settings:
+  base:
+    SWIFT_VERSION: 5.10
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0
+targets:
+  Bumper:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Bumper
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.genejohnson.bumper
+        INFOPLIST_FILE: Bumper/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: Bumper/Info.plist
+      properties:
+        CFBundleDisplayName: Bumper
+  BumperTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: BumperTests
+    dependencies:
+      - target: Bumper
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.genejohnson.bumper.tests
+schemes:
+  Bumper:
+    build:
+      targets:
+        Bumper: all
+        BumperTests: [test]
+    test:
+      gatherCoverageData: false
+      targets:
+        - name: BumperTests

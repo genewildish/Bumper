@@ -1,0 +1,477 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		22EB41D33D32E4D4A645DF70 /* PayoutProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A63A5148FDAB92F8A6FF9E /* PayoutProcessorTests.swift */; };
+		3E6FED5DEB67429E16ADD1E4 /* MicroDebt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC466909A98C3313856F170 /* MicroDebt.swift */; };
+		4705ECEF1F215FADA9DC5636 /* AddDebtSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B9AD3A32856EFDB680E524 /* AddDebtSheetView.swift */; };
+		5A79C327625D5349DDADF428 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08BA4DA661F18ECE71732B44 /* AppSettings.swift */; };
+		68FCFACBCCCA20BBDB998F72 /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 912153FD95A73E8824E940BA /* Formatting.swift */; };
+		9EECDB3351F4A0E43570D55A /* PayoutProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD3F716A07F0FCBC4E12AC5 /* PayoutProcessor.swift */; };
+		AFEC56E3116F7C431C041610 /* BumperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFC897C1FB3F6A4477C09825 /* BumperApp.swift */; };
+		BF6E269632E751149B4EB811 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27A433D7BB9944C743598BE /* ContentView.swift */; };
+		C4BA6BC95D82E89F0F888CE7 /* DebtStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFD85774D241AB589C955C5 /* DebtStore.swift */; };
+		C8F7ABC783A810DCEE80B0E6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE15A4994CB41FA0F1232DDC /* Assets.xcassets */; };
+		C914996F0FD3FCDECAD823CB /* DebtCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92E7838F7301B3C1B24C1CA /* DebtCardView.swift */; };
+		FC7FED401B9F64C298E2E59C /* MonetizationOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A05AB9D169EABE5525BA8E /* MonetizationOption.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		72D8DCAF05E992A4921CBD79 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 091BA15078E4B49A440DF5D2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 07F31D5639B9CD8E829698ED;
+			remoteInfo = Bumper;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		08BA4DA661F18ECE71732B44 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		1EC466909A98C3313856F170 /* MicroDebt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroDebt.swift; sourceTree = "<group>"; };
+		3BD3F716A07F0FCBC4E12AC5 /* PayoutProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutProcessor.swift; sourceTree = "<group>"; };
+		4003927EA7D2EE861BF86638 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		912153FD95A73E8824E940BA /* Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatting.swift; sourceTree = "<group>"; };
+		A4A63A5148FDAB92F8A6FF9E /* PayoutProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutProcessorTests.swift; sourceTree = "<group>"; };
+		A4B9AD3A32856EFDB680E524 /* AddDebtSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDebtSheetView.swift; sourceTree = "<group>"; };
+		AEBC5018A3C6CA03D89B8243 /* Bumper.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Bumper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B92E7838F7301B3C1B24C1CA /* DebtCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtCardView.swift; sourceTree = "<group>"; };
+		C7A05AB9D169EABE5525BA8E /* MonetizationOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonetizationOption.swift; sourceTree = "<group>"; };
+		CFC897C1FB3F6A4477C09825 /* BumperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumperApp.swift; sourceTree = "<group>"; };
+		D27A433D7BB9944C743598BE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		DAFD85774D241AB589C955C5 /* DebtStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtStore.swift; sourceTree = "<group>"; };
+		F4C94FE7B40DC4DEE161EFA7 /* BumperTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BumperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE15A4994CB41FA0F1232DDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		15803A6ABC6C29D4BBC24E37 /* Bumper */ = {
+			isa = PBXGroup;
+			children = (
+				FE15A4994CB41FA0F1232DDC /* Assets.xcassets */,
+				CFC897C1FB3F6A4477C09825 /* BumperApp.swift */,
+				4003927EA7D2EE861BF86638 /* Info.plist */,
+				848FD21698BECA25B6945880 /* Models */,
+				7FB1E1CD6E82CA9EBB7EBBC0 /* Services */,
+				7327542701EA8284BCE6CE9D /* ViewModels */,
+				5213AB9BE90B7695B761BF0D /* Views */,
+			);
+			path = Bumper;
+			sourceTree = "<group>";
+		};
+		28780269A865647460458C83 = {
+			isa = PBXGroup;
+			children = (
+				15803A6ABC6C29D4BBC24E37 /* Bumper */,
+				B299E09AB56D2CB3FE162B4C /* BumperTests */,
+				571F43D0405D8EE63D73ED3E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5213AB9BE90B7695B761BF0D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A4B9AD3A32856EFDB680E524 /* AddDebtSheetView.swift */,
+				D27A433D7BB9944C743598BE /* ContentView.swift */,
+				B92E7838F7301B3C1B24C1CA /* DebtCardView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		571F43D0405D8EE63D73ED3E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AEBC5018A3C6CA03D89B8243 /* Bumper.app */,
+				F4C94FE7B40DC4DEE161EFA7 /* BumperTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7327542701EA8284BCE6CE9D /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				DAFD85774D241AB589C955C5 /* DebtStore.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		7FB1E1CD6E82CA9EBB7EBBC0 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				912153FD95A73E8824E940BA /* Formatting.swift */,
+				3BD3F716A07F0FCBC4E12AC5 /* PayoutProcessor.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		848FD21698BECA25B6945880 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				08BA4DA661F18ECE71732B44 /* AppSettings.swift */,
+				1EC466909A98C3313856F170 /* MicroDebt.swift */,
+				C7A05AB9D169EABE5525BA8E /* MonetizationOption.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B299E09AB56D2CB3FE162B4C /* BumperTests */ = {
+			isa = PBXGroup;
+			children = (
+				A4A63A5148FDAB92F8A6FF9E /* PayoutProcessorTests.swift */,
+			);
+			path = BumperTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		07F31D5639B9CD8E829698ED /* Bumper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E0714F3393332235DBC7298C /* Build configuration list for PBXNativeTarget "Bumper" */;
+			buildPhases = (
+				57D73BF5E2FAB284777406D3 /* Sources */,
+				284985FB63A6C9E63B54E532 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Bumper;
+			packageProductDependencies = (
+			);
+			productName = Bumper;
+			productReference = AEBC5018A3C6CA03D89B8243 /* Bumper.app */;
+			productType = "com.apple.product-type.application";
+		};
+		488125CBAC605AB8AFF19950 /* BumperTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DCABCA8129097911A40528AD /* Build configuration list for PBXNativeTarget "BumperTests" */;
+			buildPhases = (
+				BD48DB212761D025BA07637E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				29005AE4568D941A9B053ABF /* PBXTargetDependency */,
+			);
+			name = BumperTests;
+			packageProductDependencies = (
+			);
+			productName = BumperTests;
+			productReference = F4C94FE7B40DC4DEE161EFA7 /* BumperTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		091BA15078E4B49A440DF5D2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					07F31D5639B9CD8E829698ED = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4025BCAD562AF86354B8279B /* Build configuration list for PBXProject "Bumper" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 28780269A865647460458C83;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				07F31D5639B9CD8E829698ED /* Bumper */,
+				488125CBAC605AB8AFF19950 /* BumperTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		284985FB63A6C9E63B54E532 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C8F7ABC783A810DCEE80B0E6 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		57D73BF5E2FAB284777406D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4705ECEF1F215FADA9DC5636 /* AddDebtSheetView.swift in Sources */,
+				5A79C327625D5349DDADF428 /* AppSettings.swift in Sources */,
+				AFEC56E3116F7C431C041610 /* BumperApp.swift in Sources */,
+				BF6E269632E751149B4EB811 /* ContentView.swift in Sources */,
+				C914996F0FD3FCDECAD823CB /* DebtCardView.swift in Sources */,
+				C4BA6BC95D82E89F0F888CE7 /* DebtStore.swift in Sources */,
+				68FCFACBCCCA20BBDB998F72 /* Formatting.swift in Sources */,
+				3E6FED5DEB67429E16ADD1E4 /* MicroDebt.swift in Sources */,
+				FC7FED401B9F64C298E2E59C /* MonetizationOption.swift in Sources */,
+				9EECDB3351F4A0E43570D55A /* PayoutProcessor.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD48DB212761D025BA07637E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22EB41D33D32E4D4A645DF70 /* PayoutProcessorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		29005AE4568D941A9B053ABF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 07F31D5639B9CD8E829698ED /* Bumper */;
+			targetProxy = 72D8DCAF05E992A4921CBD79 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4A7B582CA72C462533DDB615 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Debug;
+		};
+		64E79DAFE91725B4758E2CB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = Bumper/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.genejohnson.bumper;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		740E6FB24ABC9ADA053C8C86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.genejohnson.bumper.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Bumper.app/Bumper";
+			};
+			name = Debug;
+		};
+		8E25C2B7D822836E3BDD07DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.genejohnson.bumper.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Bumper.app/Bumper";
+			};
+			name = Release;
+		};
+		E35202AC74979BAEAAACA2A9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = Bumper/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.genejohnson.bumper;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F32A0E7A13DF102071669133 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4025BCAD562AF86354B8279B /* Build configuration list for PBXProject "Bumper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4A7B582CA72C462533DDB615 /* Debug */,
+				F32A0E7A13DF102071669133 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DCABCA8129097911A40528AD /* Build configuration list for PBXNativeTarget "BumperTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				740E6FB24ABC9ADA053C8C86 /* Debug */,
+				8E25C2B7D822836E3BDD07DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E0714F3393332235DBC7298C /* Build configuration list for PBXNativeTarget "Bumper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E35202AC74979BAEAAACA2A9 /* Debug */,
+				64E79DAFE91725B4758E2CB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 091BA15078E4B49A440DF5D2 /* Project object */;
+}
