@@ -13,6 +13,7 @@
 		5A79C327625D5349DDADF428 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08BA4DA661F18ECE71732B44 /* AppSettings.swift */; };
 		68FCFACBCCCA20BBDB998F72 /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 912153FD95A73E8824E940BA /* Formatting.swift */; };
 		9EECDB3351F4A0E43570D55A /* PayoutProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD3F716A07F0FCBC4E12AC5 /* PayoutProcessor.swift */; };
+		AE2877616CDD6E2D726AAF0F /* PayoutExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50211FEE2F04F43CB396920 /* PayoutExecutor.swift */; };
 		AFEC56E3116F7C431C041610 /* BumperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFC897C1FB3F6A4477C09825 /* BumperApp.swift */; };
 		BF6E269632E751149B4EB811 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27A433D7BB9944C743598BE /* ContentView.swift */; };
 		C4BA6BC95D82E89F0F888CE7 /* DebtStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFD85774D241AB589C955C5 /* DebtStore.swift */; };
@@ -40,6 +41,7 @@
 		A4A63A5148FDAB92F8A6FF9E /* PayoutProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutProcessorTests.swift; sourceTree = "<group>"; };
 		A4B9AD3A32856EFDB680E524 /* AddDebtSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDebtSheetView.swift; sourceTree = "<group>"; };
 		AEBC5018A3C6CA03D89B8243 /* Bumper.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Bumper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50211FEE2F04F43CB396920 /* PayoutExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutExecutor.swift; sourceTree = "<group>"; };
 		B92E7838F7301B3C1B24C1CA /* DebtCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtCardView.swift; sourceTree = "<group>"; };
 		C7A05AB9D169EABE5525BA8E /* MonetizationOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonetizationOption.swift; sourceTree = "<group>"; };
 		CFC897C1FB3F6A4477C09825 /* BumperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumperApp.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				912153FD95A73E8824E940BA /* Formatting.swift */,
+				B50211FEE2F04F43CB396920 /* PayoutExecutor.swift */,
 				3BD3F716A07F0FCBC4E12AC5 /* PayoutProcessor.swift */,
 			);
 			path = Services;
@@ -225,6 +228,7 @@
 				68FCFACBCCCA20BBDB998F72 /* Formatting.swift in Sources */,
 				3E6FED5DEB67429E16ADD1E4 /* MicroDebt.swift in Sources */,
 				FC7FED401B9F64C298E2E59C /* MonetizationOption.swift in Sources */,
+				AE2877616CDD6E2D726AAF0F /* PayoutExecutor.swift in Sources */,
 				9EECDB3351F4A0E43570D55A /* PayoutProcessor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
