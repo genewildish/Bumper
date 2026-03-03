@@ -5,6 +5,13 @@
 set -u
 
 TASK=${1:-TASK-001}
+MODE=$(python3 scripts/wintermute_mode.py get 2>/dev/null || echo "portable")
+if [[ "$MODE" != "portable" ]]; then
+  echo "Current mode is '$MODE'. scripts/run_agent.sh only runs in portable mode."
+  echo "Use ./scripts/run_session.sh $TASK or switch mode:"
+  echo "  python3 scripts/wintermute_mode.py set portable"
+  exit 2
+fi
 if [[ ! -f "tasks/${TASK}.md" ]]; then
   echo "Task file not found: tasks/${TASK}.md"
   exit 1

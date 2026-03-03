@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
 """
-Post-session synthesis. Reads JSONL log + git log, produces a narrative document.
+Post-session synthesis. Reads JSONL log + git log, produces:
+- outputs/<session>-facts.json (authoritative machine-derived facts)
+- outputs/<session>-narrative.md (LLM narrative with fact citations)
+- outputs/<session>-uncertainty.json (dual-pass disagreement and citation checks)
 Usage: python3 scripts/synthesize.py logs/[session].jsonl
 """
 
 import json
+import os
+import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-
+try:
+    import anthropic
+except Exception:
+    anthropic = None
 import anthropic
 
 
@@ -27,6 +35,19 @@ def load_events(log_file: str) -> list[dict]:
     return events
 
 
+def get_mode() -> str:
+    config_path = Path("wintermute.config.json")
+    if not config_path.exists():
+        return "portable"
+    try:
+        with open(config_path, encoding="utf-8") as f:
+            cfg = json.load(f)
+        mode = cfg.get("mode", "portable")
+        return mode if mode in {"portable", "full-warp"} else "portable"
+    except Exception:
+        return "portable"
+
+
 def get_git_log() -> str:
     try:
         result = subprocess.run(
@@ -38,6 +59,33 @@ def get_git_log() -> str:
         return result.stdout
     except Exception:
         return "(git log unavailable)"
+
+
+def get_git_log_structured(limit: int = 50) -> list[dict]:
+    try:
+        result = subprocess.run(
+            ["git", "--no-pager", "log", f"-{limit}", "--pretty=format:%H%x1f%h%x1f%ct%x1f%s"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        commits = []
+        for i, line in enumerate(result.stdout.splitlines()):
+            parts = line.split("\x1f")
+            if len(parts) != 4:
+                continue
+            commits.append(
+                {
+                    "id": f"GIT-{i+1:03d}",
+                    "hash": parts[0],
+                    "short_hash": parts[1],
+                    "ts": int(parts[2]) if parts[2].isdigit() else None,
+                    "subject": parts[3],
+                }
+            )
+        return commits
+    except Exception:
+        return []
 
 
 def get_session_stats(events: list[dict]) -> dict:
@@ -58,6 +106,33 @@ def get_session_stats(events: list[dict]) -> dict:
     }
 
 
+def build_facts(events: list[dict], stats: dict, commits: list[dict]) -> dict:
+    indexed_events = []
+    counts = {}
+    for e in events:
+        event_type = e.get("event", "unknown")
+        counts[event_type] = counts.get(event_type, 0) + 1
+        indexed_events.append(
+            {
+                "id": f"EVT-{len(indexed_events)+1:04d}",
+                "event": event_type,
+                "agent": e.get("agent"),
+                "task": e.get("task"),
+                "session": e.get("session"),
+                "ts": e.get("ts"),
+                "data": e.get("data"),
+            }
+        )
+    return {
+        "schema_version": 1,
+        "generated_by": "scripts/synthesize.py",
+        "stats": stats,
+        "event_counts": counts,
+        "events": indexed_events,
+        "git_commits": commits,
+    }
+
+
 def chunk_output_events(events: list[dict], chunk_size: int = 100) -> list[str]:
     output_lines = [e.get("data") for e in events if e.get("event") == "output" and e.get("data")]
     chunks = []
@@ -66,7 +141,7 @@ def chunk_output_events(events: list[dict], chunk_size: int = 100) -> list[str]:
     return chunks
 
 
-def annotate_chunk(client: anthropic.Anthropic, chunk: str, task: str, chunk_num: int) -> str:
+def annotate_chunk(client, chunk: str, task: str, chunk_num: int) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1000,
@@ -85,8 +160,54 @@ OUTPUT:
     return response.content[0].text
 
 
+def synthesize_without_llm(stats: dict, facts: dict, mode: str, reason: str) -> str:
+    event_ids = [e.get("id") for e in facts.get("events", []) if e.get("id")]
+    git_ids = [g.get("id") for g in facts.get("git_commits", []) if g.get("id")]
+    evt_ref = f"[FACT:{event_ids[0]}]" if event_ids else ""
+    git_ref = f"[FACT:{git_ids[0]}]" if git_ids else ""
+
+    done_events = facts.get("event_counts", {}).get("agent_done", 0) + facts.get("event_counts", {}).get("warp_session_done", 0)
+    error_events = facts.get("event_counts", {}).get("agent_error", 0) + facts.get("event_counts", {}).get("warp_session_error", 0)
+    started_events = facts.get("event_counts", {}).get("agent_start", 0) + facts.get("event_counts", {}).get("warp_session_start", 0)
+
+    lines = [
+        "# Session Summary",
+        f"Mode: `{mode}`. LLM synthesis was skipped because {reason}.",
+        f"Observed {started_events} session starts, {done_events} session completions, and {error_events} error events {evt_ref}.",
+        "",
+        "# What Agents Did",
+        f"Tasks touched: {', '.join(stats.get('tasks', [])) or '(none)'} {evt_ref}",
+        f"Agents observed: {', '.join(stats.get('agents', [])) or '(none)'} {evt_ref}",
+        f"Total commits counted from terminal events: {stats.get('total_commits', 0)} {evt_ref}",
+        "",
+        "# What Worked",
+        f"Machine-derived facts and structured git history were generated successfully {evt_ref} {git_ref}.",
+        "",
+        "# What Didn't Work",
+        f"No model-authored narrative was produced in this run ({reason}).",
+        "Interpretation and recommendation quality require manual review of facts/logs.",
+        "",
+        "# Decisions Made",
+        f"The session was processed in `{mode}` mode with deterministic/fact-first synthesis output only {evt_ref}.",
+        "",
+        "# Open Questions",
+        "- Should full narrative generation be enabled for this environment?",
+        "- Do we want stricter required fields for manual full-warp session closure events?",
+        "",
+        "# Recommended AGENT_PROMPT.md Changes",
+        "No automatic prompt change recommendations were generated in non-LLM mode.",
+    ]
+    return "\n".join(lines)
+
+
 def synthesize_narrative(
-    client: anthropic.Anthropic, annotations: list[str], stats: dict, git_log: str, agent_prompt: str
+    client,
+    annotations: list[str],
+    stats: dict,
+    git_log: str,
+    agent_prompt: str,
+    facts: dict,
+    pass_label: str,
 ) -> str:
     annotation_text = "\n\n".join(f"CHUNK {i + 1}:\n{a}" for i, a in enumerate(annotations))
     response = client.messages.create(
@@ -110,7 +231,10 @@ AGENT BEHAVIOR ANNOTATIONS (chunk by chunk):
 CURRENT AGENT_PROMPT.md:
 {agent_prompt}
 
-Produce a narrative with these sections:
+AUTHORITATIVE FACTS JSON (machine-derived, source of truth):
+{json.dumps(facts, indent=2)}
+
+Produce a narrative with these sections (PASS {pass_label}):
 1. Session Summary
 2. What Agents Did
 3. What Worked
@@ -119,11 +243,47 @@ Produce a narrative with these sections:
 6. Open Questions
 7. Recommended AGENT_PROMPT.md Changes
 
+Rules:
+- Every non-trivial factual claim MUST include at least one citation in the form [FACT:EVT-####] or [FACT:GIT-###].
+- If a claim cannot be supported by a fact id from the provided JSON, label it as [UNCERTAIN] and explain why.
+- Prefer omission over unsupported inference.
+- Do not invent event IDs, commit hashes, or outcomes.
+
 Be specific and honest.""",
             }
         ],
     )
     return response.content[0].text
+
+
+def extract_fact_ids(text: str) -> set[str]:
+    return set(re.findall(r"\[FACT:(EVT-\d{4}|GIT-\d{3})\]", text))
+
+
+def count_uncertain_marks(text: str) -> int:
+    return text.count("[UNCERTAIN]")
+
+
+def build_uncertainty_report(narrative_a: str, narrative_b: str, facts: dict) -> dict:
+    fact_ids_a = extract_fact_ids(narrative_a)
+    fact_ids_b = extract_fact_ids(narrative_b)
+    valid_ids = {e["id"] for e in facts.get("events", [])} | {g["id"] for g in facts.get("git_commits", [])}
+    invalid_a = sorted(fid for fid in fact_ids_a if fid not in valid_ids)
+    invalid_b = sorted(fid for fid in fact_ids_b if fid not in valid_ids)
+    return {
+        "schema_version": 1,
+        "citation_counts": {"pass_a": len(fact_ids_a), "pass_b": len(fact_ids_b)},
+        "invalid_citations": {"pass_a": invalid_a, "pass_b": invalid_b},
+        "citation_diff": {
+            "only_in_pass_a": sorted(fact_ids_a - fact_ids_b),
+            "only_in_pass_b": sorted(fact_ids_b - fact_ids_a),
+        },
+        "uncertain_markers": {"pass_a": count_uncertain_marks(narrative_a), "pass_b": count_uncertain_marks(narrative_b)},
+        "notes": [
+            "Large citation_diff suggests unstable interpretation across passes.",
+            "invalid_citations must be resolved by human review before trusting recommendations.",
+        ],
+    }
 
 
 def main() -> None:
@@ -132,38 +292,80 @@ def main() -> None:
         sys.exit(1)
 
     log_file = sys.argv[1]
-    client = anthropic.Anthropic()
+    mode = get_mode()
+    has_api_key = bool(os.getenv("ANTHROPIC_API_KEY"))
+    llm_enabled = mode == "portable" and anthropic is not None and has_api_key
+    llm_reason = ""
+    if not llm_enabled:
+        if mode != "portable":
+            llm_reason = f"mode is '{mode}'"
+        elif anthropic is None:
+            llm_reason = "anthropic package is unavailable"
+        else:
+            llm_reason = "ANTHROPIC_API_KEY is missing"
+    client = anthropic.Anthropic() if llm_enabled else None
 
     print(f"Loading events from {log_file}...")
     events = load_events(log_file)
     stats = get_session_stats(events)
     git_log = get_git_log()
+    git_commits = get_git_log_structured()
 
     print(f"Stats: {stats}")
     agent_prompt = Path("AGENT_PROMPT.md").read_text(encoding="utf-8") if Path("AGENT_PROMPT.md").exists() else ""
+    facts = build_facts(events, stats, git_commits)
 
-    tasks = set(e.get("task") for e in events if e.get("task"))
     all_annotations = []
-
-    for task in tasks:
-        task_events = [e for e in events if e.get("task") == task]
-        chunks = chunk_output_events(task_events)
-        print(f"Annotating {task}: {len(chunks)} chunks...")
-        for i, chunk in enumerate(chunks):
-            if chunk.strip():
-                all_annotations.append(annotate_chunk(client, chunk, task, i + 1))
-
-    print("Synthesizing narrative...")
-    narrative = synthesize_narrative(client, all_annotations, stats, git_log, agent_prompt)
+    if llm_enabled:
+        tasks = set(e.get("task") for e in events if e.get("task"))
+        for task in tasks:
+            task_events = [e for e in events if e.get("task") == task]
+            chunks = chunk_output_events(task_events)
+            print(f"Annotating {task}: {len(chunks)} chunks...")
+            for i, chunk in enumerate(chunks):
+                if chunk.strip():
+                    all_annotations.append(annotate_chunk(client, chunk, task, i + 1))
 
     session_date = datetime.now().strftime("%Y-%m-%d-%H%M")
-    output_file = f"outputs/{session_date}-narrative.md"
     Path("outputs").mkdir(exist_ok=True)
-    Path(output_file).write_text(narrative, encoding="utf-8")
+    facts_file = f"outputs/{session_date}-facts.json"
+    narrative_file = f"outputs/{session_date}-narrative.md"
+    narrative_b_file = f"outputs/{session_date}-narrative-pass-b.md"
+    uncertainty_file = f"outputs/{session_date}-uncertainty.json"
 
-    print(f"\nNarrative written to: {output_file}")
+    Path(facts_file).write_text(json.dumps(facts, indent=2), encoding="utf-8")
+
+    if llm_enabled:
+        print("Synthesizing narrative pass A...")
+        narrative_a = synthesize_narrative(client, all_annotations, stats, git_log, agent_prompt, facts, "A")
+        print("Synthesizing narrative pass B...")
+        narrative_b = synthesize_narrative(client, all_annotations, stats, git_log, agent_prompt, facts, "B")
+        uncertainty = build_uncertainty_report(narrative_a, narrative_b, facts)
+    else:
+        print(f"LLM synthesis skipped ({llm_reason}); generating facts-only narrative.")
+        narrative_a = synthesize_without_llm(stats, facts, mode, llm_reason)
+        narrative_b = f"# Pass B skipped\n\nReason: {llm_reason}\n\n" + narrative_a
+        uncertainty = {
+            "schema_version": 1,
+            "llm_synthesis": "skipped",
+            "reason": llm_reason,
+            "mode": mode,
+            "notes": [
+                "Use facts file and raw logs for manual interpretation.",
+                "Set portable mode and ANTHROPIC_API_KEY to enable dual-pass narratives.",
+            ],
+        }
+
+    Path(narrative_file).write_text(narrative_a, encoding="utf-8")
+    Path(narrative_b_file).write_text(narrative_b, encoding="utf-8")
+    Path(uncertainty_file).write_text(json.dumps(uncertainty, indent=2), encoding="utf-8")
+
+    print(f"\nFacts written to: {facts_file}")
+    print(f"Narrative (pass A) written to: {narrative_file}")
+    print(f"Narrative (pass B) written to: {narrative_b_file}")
+    print(f"Uncertainty report written to: {uncertainty_file}")
     print("\n--- PREVIEW ---")
-    print(narrative[:500] + "...")
+    print(narrative_a[:500] + "...")
 
 
 if __name__ == "__main__":

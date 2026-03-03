@@ -58,9 +58,12 @@ State is persisted as JSON to `~/Library/Application Support/Bumper/state.json` 
 - **Commit style**: Small, focused commits; avoid unrelated refactors
 
 ## Wintermute Agent Loop
+- Set/check mode with `python3 scripts/wintermute_mode.py` and `python3 scripts/wintermute_mode.py set <portable|full-warp>`.
 - `WARP.md` is the project context file for agent sessions.
 - `AGENT_PROMPT.md` is the shared worker system prompt for aider runs.
 - `tasks/TASK-NNN.md` files are the source of truth for available and claimed work.
-- `scripts/run_agent.sh TASK-001` starts a worker and writes JSONL logs to `logs/`.
-- `scripts/synthesize.py logs/<session>.jsonl` produces session narratives in `outputs/`.
+- `scripts/run_session.sh TASK-001` is the mode-aware session entrypoint.
+  - `portable` mode routes to `scripts/run_agent.sh` (aider flow).
+  - `full-warp` mode logs a start event and expects manual task execution in Warp; close with `scripts/record_warp_session.sh`.
+- `scripts/synthesize.py logs/<session>.jsonl` produces session narratives in `outputs/` (model-backed in portable mode, facts-only fallback otherwise).
 - `scripts/nr_query.py <session_id>` fetches `WintermuteEvent` timeline from New Relic when API credentials are configured.
