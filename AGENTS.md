@@ -1,0 +1,66 @@
+# AGENTS.md
+
+This file provides guidance to WARP (warp.dev) when working with code in this repository.
+
+## Project Overview
+Bumper is an iOS SwiftUI app (iOS 17+) for tracking micro-debts between friends. Users track small debts with a one-tap "Bump $amount" button. When the balance reaches a threshold (default $25), the app triggers an automatic payout (currently simulated locally).
+
+## Build and Test Commands
+
+### Generate Xcode project
+```bash
+xcodegen generate --spec project.yml
+```
+Run this after editing `project.yml` to regenerate `Bumper.xcodeproj`.
+
+### Run tests
+Open `Bumper.xcodeproj` in Xcode, select the `Bumper` scheme, and run tests via Xcode UI (Cmd+U).
+
+Note: Command-line `xcodebuild` validation is blocked due to local environment limitations.
+
+## Architecture
+
+### Core Flow
+1. User creates a `MicroDebt` with a name, increment amount (capped at $5), and payout threshold
+2. Each "bump" increments the debt balance by the increment amount
+3. `PayoutProcessor.bump()` checks if balance ≥ threshold and triggers a `PayoutEvent` if true
+4. Balance resets to zero after payout; payout amount equals the full pre-payout balance
+
+### Key Components
+- **Models** (`Bumper/Models/`): Domain types
+  - `MicroDebt`: Represents a named debt with balance, threshold, and payout history
+  - `PayoutEvent`: Records automatic payout details (amount, timestamp, note)
+  - `AppSettings`: Stores debtor/creditor names, default threshold, monetization option
+
+- **ViewModels** (`Bumper/ViewModels/`): State management
+  - `DebtStore`: Observable store managing debt collection, persistence to JSON, and bump actions. Seeds with a default "Pinball machine games" debt on first launch.
+
+- **Services** (`Bumper/Services/`):
+  - `PayoutProcessor`: Pure function that mutates a debt in-place and returns `.paidOut(event)` or `.none`
+  - `Formatting`: Currency/date formatting utilities
+
+- **Views** (`Bumper/Views/`): SwiftUI presentation layer
+  - `ContentView`: Main list of debts
+  - `DebtCardView`: Individual debt card with bump button
+  - `AddDebtSheetView`: Sheet for creating new debts
+
+### Persistence
+State is persisted as JSON to `~/Library/Application Support/Bumper/state.json` (or equivalent per platform). The `DebtStore` uses ISO8601 date encoding and pretty-printed, sorted-key JSON.
+
+### Payout Logic
+`PayoutProcessor.bump()` uses a floating-point tolerance (`balance + 0.000_001 >= threshold`) to handle rounding. Payouts capture the entire balance, not just the threshold amount.
+
+## Development Conventions
+- **Language**: Keep UI text friendly and simple
+- **Terminology**: Always use "Bump $amount" for the debt increment action
+- **Constraints**: Per-bump increments are clamped between $0.25 and $5.00
+- **Thresholds**: Minimum payout threshold is $5.00
+- **Commit style**: Small, focused commits; avoid unrelated refactors
+
+## Wintermute Agent Loop
+- `WARP.md` is the project context file for agent sessions.
+- `AGENT_PROMPT.md` is the shared worker system prompt for aider runs.
+- `tasks/TASK-NNN.md` files are the source of truth for available and claimed work.
+- `scripts/run_agent.sh TASK-001` starts a worker and writes JSONL logs to `logs/`.
+- `scripts/synthesize.py logs/<session>.jsonl` produces session narratives in `outputs/`.
+- `scripts/nr_query.py <session_id>` fetches `WintermuteEvent` timeline from New Relic when API credentials are configured.
