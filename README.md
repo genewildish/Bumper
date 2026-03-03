@@ -1,5 +1,5 @@
 # Bumper
-Bumper is a fun and friendly iOS app for tallying small debts between friends or family, then automatically paying them out once an agreed threshold is reached.
+Bumper is an iOS app for tallying small debts between friends or family, then automatically paying them out once an agreed threshold is reached.
 
 ## What Bumper does
 - Track named micro-debts (for example: `Pinball machine games`).
@@ -21,7 +21,12 @@ Bumper is a fun and friendly iOS app for tallying small debts between friends or
 - `Bumper/` — App source code (models, views, store, services, assets).
 - `BumperTests/` — Unit tests for payout behavior.
 - `project.yml` — XcodeGen spec to regenerate `Bumper.xcodeproj`.
-- `AGENT_PROMPT.md` and `PROGRESS.md` — Metamorph collaboration context files.
+- `WARP.md` — project context used by Wintermute agents.
+- `AGENT_PROMPT.md` — shared worker prompt for aider sessions.
+- `wintermute.config.json` — mode toggle (`portable` vs `full-warp`).
+- `tasks/` — one markdown file per task.
+- `logs/` and `outputs/` — session logs and synthesis narratives.
+- `scripts/` — Wintermute runtime scripts (`run_session.sh`, `run_agent.sh`, `record_warp_session.sh`, `wintermute_mode.py`, `synthesize.py`, `prompt_evaluator.py`, `nr_query.py`).
 
 ## Run in Xcode
 1. Open `Bumper.xcodeproj` in Xcode.
@@ -34,24 +39,64 @@ To regenerate the project file after editing `project.yml`:
 xcodegen generate --spec project.yml
 ```
 
-## Metamorph setup
-This repo includes Metamorph-friendly prompt/progress files.
+## Wintermute setup
+This repo supports two switchable execution modes:
+- `portable` (work-safe/agnostic): aider-driven sessions and optional model synthesis
+- `full-warp` (POC): run tasks directly in Warp, with manual session close logging
 
-1. Install Metamorph (from upstream docs):
+1. Check or switch mode:
    ```bash
-   go install github.com/robmorgan/metamorph@latest
+   python3 scripts/wintermute_mode.py
+   python3 scripts/wintermute_mode.py set portable
+   # or
+   python3 scripts/wintermute_mode.py set full-warp
    ```
-2. Register this repository as a Metamorph project:
+2. Install dependencies:
    ```bash
-   metamorph project create .
+   pip install aider-chat anthropic
    ```
-3. Add tasks and start agents:
+3. Configure credentials (only required when you want model-backed runs/synthesis):
    ```bash
-   metamorph task add "Build bank transfer integration prototype"
-   metamorph start
+   export ANTHROPIC_API_KEY=sk-ant-...
    ```
+   Optional New Relic event streaming:
+   ```bash
+   export NEW_RELIC_LICENSE_KEY=...
+   export NEW_RELIC_ACCOUNT_ID=...
+   export NEW_RELIC_API_KEY=...
+   ```
+4. Ensure scripts are executable:
+   ```bash
+   chmod +x scripts/*.sh scripts/*.py
+   ```
+5. Create or edit task files in `tasks/`.
+6. Start a session:
+   ```bash
+   ./scripts/run_session.sh TASK-001
+   ```
+   - In `portable` mode, this executes aider via `scripts/run_agent.sh`.
+   - In `full-warp` mode, this writes a start event and prints follow-up commands.
+7. If running `full-warp`, close the session when done:
+   ```bash
+   ./scripts/record_warp_session.sh logs/<session>.jsonl TASK-001 done
+   ```
+8. Synthesize the session:
+   ```bash
+   python3 scripts/synthesize.py logs/<session>.jsonl
+   ```
+   - In `portable` mode + API key: dual-pass model narratives.
+   - In `full-warp` mode or without key: facts-first deterministic narrative (no model call).
+9. Optional prompt review:
+   ```bash
+   python3 scripts/prompt_evaluator.py outputs/<session>-narrative.md
+   ```
+   If Anthropic access is unavailable, this exits cleanly and you can review `AGENT_PROMPT.md` manually.
 
-Note: Metamorph stores project runtime configuration in `~/.metamorph/projects/<project-name>/config.json`.
+Review these generated files before acting on recommendations:
+- `outputs/<session>-facts.json` (authoritative machine-derived facts)
+- `outputs/<session>-narrative.md` (primary narrative)
+- `outputs/<session>-narrative-pass-b.md` (second-pass or skipped marker, mode-dependent)
+- `outputs/<session>-uncertainty.json` (citation diff/uncertainty report)
 
 ## Product notes
 - “Automatic payout” is currently represented as a local simulated transfer event.

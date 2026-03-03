@@ -1,28 +1,31 @@
-# Project Instructions
-You are working on Bumper, an iOS SwiftUI app for friendly micro-debts.
+You are a focused coding agent working on a shared codebase with other agents running in parallel.
 
-## Product intent
-- Bumper tracks tiny debts (typically less than $5 per bump) between a debtor and creditor.
-- Each debt has:
-  - Name
-  - Increment amount (`Bump $amount`)
-  - Payout threshold
-- Once threshold is reached, debt auto-pays (simulated transfer event).
+## Your workflow
+1. Read WARP.md to understand the project.
+2. Read all tasks/TASK-*.md files to find an available task.
+3. Claim the task: update its header (status: in_progress, claimed_by: agent-N, claimed_at: timestamp).
+4. Commit the claim immediately: `git add tasks/ && git commit -m "agent-N: claim TASK-NNN"`.
+5. If the push is rejected, another agent claimed first — pick a different task.
+6. Do the work. Commit frequently with messages like: `agent-N: [what you did and why]`.
+7. When done: update task header (status: completed), add a brief note under ## Agent Notes, commit and push.
+8. Pick another available task or stop if none remain.
 
-## Build & test
-- Generate project: `xcodegen generate --spec project.yml`
-- Open project: `Bumper.xcodeproj`
-- Target: `Bumper` (iOS 17+)
-- Tests: `BumperTests`
+## Rules
+- Never modify another agent's task file.
+- Never rewrite or refactor code outside your assigned task scope.
+- If you're uncertain about something, write a note in the task file and move on — don't block.
+- Commit messages must explain reasoning, not just what changed.
+- If you hit a conflict on push: `git pull --rebase`, resolve, push again.
 
-## Architecture
-- `Bumper/Models`: domain types (`MicroDebt`, `PayoutEvent`, `AppSettings`)
-- `Bumper/ViewModels`: state and persistence (`DebtStore`)
-- `Bumper/Services`: payout and formatting logic
-- `Bumper/Views`: SwiftUI presentation
+## Project-specific guardrails
+- Preserve "Bump $amount" wording for user-facing increment actions.
+- Keep increment constraints (`$0.25...$5.00`) and minimum threshold (`$5.00`) intact unless task scope says otherwise.
+- Preserve payout semantics: when threshold is met/crossed, payout amount is the full current balance and balance resets to zero.
+- Prefer focused behavior tests around externally visible flows; add targeted unit tests for isolated logic changes.
+- If command-line iOS test execution is unavailable, document what was validated and what still needs Xcode UI verification.
 
-## Working conventions
-- Keep UI language friendly and simple.
-- Preserve `Bump $amount` as the debt increment action text.
-- Keep per-bump increments constrained to micro-debt values.
-- Prefer small, focused commits and avoid unrelated refactors.
+## What good work looks like
+- Small, focused commits.
+- Decisions explained in commit messages.
+- Test coverage for anything you add.
+- No scope creep.

@@ -1,0 +1,11 @@
+{
+  "mode": "portable",
+  "modes": {
+    "portable": {
+      "description": "Aider-driven workflow (agnostic/work-safe): uses scripts/run_agent.sh and optional Anthropic/New Relic APIs."
+    },
+    "full-warp": {
+      "description": "Warp-native workflow (POC): task execution is done in Warp directly, with manual session close logging."
+    }
+  }
+}
