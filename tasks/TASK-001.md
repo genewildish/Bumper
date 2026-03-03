@@ -1,8 +1,8 @@
 ---
 id: TASK-001
-status: available
-claimed_by: null
-claimed_at: null
+status: in_progress
+claimed_by: warp-oz
+claimed_at: 2026-03-03T23:30:50Z
 ---
 
 # TASK-001: Define bank transfer integration boundary
