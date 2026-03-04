@@ -10,11 +10,15 @@ import json
 import os
 import sys
 from pathlib import Path
+
+# Auto-reexec with .venv python if anthropic is unavailable in current interpreter
 try:
     import anthropic
-except Exception:
+except ModuleNotFoundError:
+    venv_python = Path(__file__).resolve().parents[1] / ".venv" / "bin" / "python"
+    if venv_python.exists():
+        os.execv(str(venv_python), [str(venv_python)] + sys.argv)
     anthropic = None
-import anthropic
 
 
 def main() -> None:
@@ -38,7 +42,7 @@ def main() -> None:
     client = anthropic.Anthropic()
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=2200,
+        max_tokens=4096,
         messages=[
             {
                 "role": "user",
@@ -71,12 +75,29 @@ Rules:
         ],
     )
     raw = response.content[0].text
+    # Try direct JSON parse first
     try:
         parsed = json.loads(raw)
-    except Exception:
-        print("Failed to parse model output as JSON. Raw output follows:\n")
-        print(raw)
-        sys.exit(2)
+    except json.JSONDecodeError:
+        # Extract from markdown code fence if present
+        import re
+        # Try to match ```json ... ``` or ```json ... (EOF)
+        match = re.search(r'```(?:json)?\s*\n(.*?)(?:\n```|$)', raw, re.DOTALL)
+        if match:
+            json_candidate = match.group(1).strip()
+            try:
+                parsed = json.loads(json_candidate)
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse JSON from markdown fence: {e}")
+                print("Extracted JSON candidate (first 2000 chars):")
+                print(json_candidate[:2000])
+                print("\nFull raw output:")
+                print(raw[:2000])
+                sys.exit(2)
+        else:
+            print("Failed to parse model output as JSON. Raw output follows:\n")
+            print(raw[:2000])
+            sys.exit(2)
 
     revised_prompt = parsed.get("revised_prompt_markdown", "")
     if not revised_prompt.strip():
