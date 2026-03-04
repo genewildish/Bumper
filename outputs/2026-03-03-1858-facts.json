@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/synthesize.py",
+  "stats": {
+    "tasks": [
+      "TASK-001"
+    ],
+    "agents": [
+      "warp-manual",
+      "warp-manual-78566"
+    ],
+    "total_commits": 0,
+    "errors": 0,
+    "duration_events": 2
+  },
+  "event_counts": {
+    "warp_session_start": 1,
+    "warp_session_done": 1
+  },
+  "events": [
+    {
+      "id": "EVT-0001",
+      "event": "warp_session_start",
+      "agent": "warp-manual-78566",
+      "task": "TASK-001",
+      "session": "2026-03-03T23:30:22Z",
+      "ts": 1772580622,
+      "data": {
+        "mode": "full-warp"
+      }
+    },
+    {
+      "id": "EVT-0002",
+      "event": "warp_session_done",
+      "agent": "warp-manual",
+      "task": "TASK-001",
+      "session": "2026-03-03T233022Z",
+      "ts": 1772580765,
+      "data": {
+        "commits": 4,
+        "mode": "full-warp"
+      }
+    }
+  ],
+  "git_commits": [
+    {
+      "id": "GIT-001",
+      "hash": "12b149cadca0105142b7565b90ce17bc20d5604d",
+      "short_hash": "12b149c",
+      "ts": 1772583872,
+      "subject": "feat: Add Fluent Bit integration for shipping Wintermute logs to New Relic."
+    },
+    {
+      "id": "GIT-002",
+      "hash": "1eefb5a00147f45d86d2e5da028e1c2624590c09",
+      "short_hash": "1eefb5a",
+      "ts": 1772581410,
+      "subject": "Merge pull request #4 from genewildish/feature/wintermute-nr-fullwarp"
+    },
+    {
+      "id": "GIT-003",
+      "hash": "37f758642e553028608fb67f0fea9797fbc788c6",
+      "short_hash": "37f7586",
+      "ts": 1772581326,
+      "subject": "Merge pull request #3 from genewildish/feature/payout-executor-boundary"
+    },
+    {
+      "id": "GIT-004",
+      "hash": "7a8391dea003e627783ee14be4dd4abaca5b5d47",
+      "short_hash": "7a8391d",
+      "ts": 1772581227,
+      "subject": "feat: add New Relic event shipping to full-warp mode sessions"
+    },
+    {
+      "id": "GIT-005",
+      "hash": "a17673bf38cbdca6af15ced0a8ed33112bd7b6d1",
+      "short_hash": "a17673b",
+      "ts": 1772580892,
+      "subject": "warp-oz: complete TASK-001 - bank transfer integration boundary defined"
+    },
+    {
+      "id": "GIT-006",
+      "hash": "c301c8889ddeb819d3d441ebadbdbc81643e7b26",
+      "short_hash": "c301c88",
+      "ts": 1772580892,
+      "subject": "warp-oz: regenerate Xcode project to include PayoutExecutor.swift"
+    },
+    {
+      "id": "GIT-007",
+      "hash": "5cbf468832cd87f576d57fb54aa7ce4d211e2591",
+      "short_hash": "5cbf468",
+      "ts": 1772580892,
+      "subject": "warp-oz: introduce PayoutExecutor protocol boundary for transfer abstraction"
+    },
+    {
+      "id": "GIT-008",
+      "hash": "177879305caa9b03d745ad653c24138ea93cbb2a",
+      "short_hash": "1778793",
+      "ts": 1772580892,
+      "subject": "warp-oz: claim TASK-001"
+    },
+    {
+      "id": "GIT-009",
+      "hash": "cb9459ce4a93ebafc9aaee242717ffe2ad2aef7b",
+      "short_hash": "cb9459c",
+      "ts": 1772567683,
+      "subject": "Merge pull request #2 from genewildish/feature/bumper-ios-metamorph-scaffold"
+    },
+    {
+      "id": "GIT-010",
+      "hash": "19590df0a0c0721d78343e697b8b76fa1d87355e",
+      "short_hash": "19590df",
+      "ts": 1772566753,
+      "subject": "feat: Introduce Wintermute execution modes for agent session management and enhance prompt evaluator output."
+    },
+    {
+      "id": "GIT-011",
+      "hash": "e223f465a0be1d9549b05758c7202bd020b284a3",
+      "short_hash": "e223f46",
+      "ts": 1772503562,
+      "subject": "feat: Establish Wintermute agent development system with new execution scripts, agent-specific documentation, and task management."
+    },
+    {
+      "id": "GIT-012",
+      "hash": "17544d365042aef93a83fa295e9a1157bb83914c",
+      "short_hash": "17544d3",
+      "ts": 1772332483,
+      "subject": "Merge pull request #1 from genewildish/feature/bumper-ios-metamorph-scaffold"
+    },
+    {
+      "id": "GIT-013",
+      "hash": "8da677e54deda8edbbd8bb2963271aea27af0000",
+      "short_hash": "8da677e",
+      "ts": 1772332259,
+      "subject": "Scaffold Bumper iOS app with Metamorph setup"
+    },
+    {
+      "id": "GIT-014",
+      "hash": "2ee9358cf476c710f938b9b3ca8f773164adc870",
+      "short_hash": "2ee9358",
+      "ts": 1772331353,
+      "subject": "Initial commit"
+    }
+  ]
+}
