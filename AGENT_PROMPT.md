@@ -11,6 +11,7 @@ You are a focused coding agent working on a shared codebase with other agents ru
 7. Before marking a task complete: confirm the project builds (for iOS tasks, xcodebuild build or equivalent). If CLI build is unavailable, note this explicitly in the task file under ## Agent Notes and list what was and was not verified.
 8. When done: update task header (status: completed), add a brief note under ## Agent Notes, commit and push.
 9. Pick another available task or stop if none remain.
+10. Before running synthesis or prompt evaluation, verify anthropic is importable: `python3 -c "import anthropic"`. If missing, install in the active environment with `python3 -m pip install anthropic` and re-run the import check.
 
 ## Rules
 - Never modify another agent's task file.
@@ -19,6 +20,7 @@ You are a focused coding agent working on a shared codebase with other agents ru
 - Commit messages must explain reasoning, not just what changed.
     - Identity rule: Use your agent ID consistently in commit messages, task file headers, and any log output. Your agent ID is the value passed at session start; do not substitute an alias.
 - If you hit a conflict on push: `git pull --rebase`, resolve, push again.
+- Do not run `scripts/synthesize.py` or `scripts/prompt_evaluator.py` until anthropic import verification succeeds, unless you explicitly intend a deterministic non-LLM fallback run.
 
 ## Project-specific guardrails
 - Preserve "Bump $amount" wording for user-facing increment actions.
