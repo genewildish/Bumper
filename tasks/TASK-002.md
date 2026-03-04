@@ -1,8 +1,8 @@
 ---
 id: TASK-002
-status: available
-claimed_by: null
-claimed_at: null
+status: completed
+claimed_by: warp-manual-917
+claimed_at: 2026-03-04T06:20:06Z
 ---
 
 # TASK-002: Add DebtStore persistence and reload regression tests
@@ -27,3 +27,16 @@ Add focused unit tests for `DebtStore` persistence behavior so state survives ap
 
 ## Agent Notes
 <!-- Agents append notes here — do not edit above this line -->
+
+### 2026-03-04T06:20:58Z - warp-manual-917
+**Implementation approach:**
+- Added `BumperTests/DebtStorePersistenceTests.swift` to cover persistence/reload regression scenarios for `DebtStore`.
+- Added coverage for:
+  - add + reload persistence
+  - remove + reload persistence
+  - payout-triggering bump persistence (balance reset, total paid out, payout event persisted)
+  - fallback behavior on missing or invalid persisted state (default settings + seed debt behavior)
+
+**Validation:**
+- Attempted CLI validation with `xcodebuild -version`, but local environment does not have full Xcode toolchain selected (`xcode-select` points to CommandLineTools only).
+- Because `xcodebuild` is unavailable, test execution could not be run from CLI in this session; assertions and test structure were validated by code inspection.

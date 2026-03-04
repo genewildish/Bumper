@@ -1,0 +1,37 @@
+Starting Fluent Bit sidecar for Wintermute logs...
+Config: scripts/fluent-bit-newrelic.conf
+Project: Bumper
+Tailing: logs/*.jsonl
+Press Ctrl+C to stop.
+Fluent Bit v4.2.3
+* Copyright (C) 2015-2025 The Fluent Bit Authors
+* Fluent Bit is a CNCF graduated project under the Fluent organization
+* https://fluentbit.io
+
+______ _                  _    ______ _ _             ___   _____ 
+|  ___| |                | |   | ___ (_) |           /   | / __  \
+| |_  | |_   _  ___ _ __ | |_  | |_/ /_| |_  __   __/ /| | `' / /'
+|  _| | | | | |/ _ \ '_ \| __| | ___ \ | __| \ \ / / /_| |   / /  
+| |   | | |_| |  __/ | | | |_  | |_/ / | |_   \ V /\___  |_./ /___
+\_|   |_|\__,_|\___|_| |_|\__| \____/|_|\__|   \_/     |_(_)_____/
+                                                                  
+             Fluent Bit v4.2 – Direct Routes Ahead
+         Celebrating 10 Years of Open, Fluent Innovation!
+
+[2026/03/03 22:19:39.482550000] [ info] [fluent bit] version=4.2.3, commit=, pid=1307
+[2026/03/03 22:19:39.483171000] [ info] [storage] ver=1.5.4, type=memory, sync=normal, checksum=off, max_chunks_up=128
+[2026/03/03 22:19:39.483222000] [ info] [simd    ] disabled
+[2026/03/03 22:19:39.483228000] [ info] [cmetrics] version=1.0.6
+[2026/03/03 22:19:39.483292000] [ info] [ctraces ] version=0.6.6
+[2026/03/03 22:19:39.483475000] [ info] [input:tail:tail.0] initializing
+[2026/03/03 22:19:39.483482000] [ info] [input:tail:tail.0] storage_strategy='memory' (memory only)
+[2026/03/03 22:19:39.483666000] [error] [input:tail:tail.0] parser 'json' is not registered
+[2026/03/03 22:19:39.487322000] [ info] [input:tail:tail.0] db: delete unmonitored stale inodes from the database: count=0
+[2026/03/03 22:19:39.582837000] [ info] [output:http:http.0] worker #1 started
+[2026/03/03 22:19:39.582835000] [ info] [output:http:http.0] worker #0 started
+[2026/03/03 22:19:39.582960000] [ info] [sp] stream processor started
+[2026/03/03 22:19:39.583139000] [ info] [engine] Shutdown Grace Period=5, Shutdown Input Grace Period=2
+[2026/03/03 22:19:41.87252000] [ info] [output:http:http.0] log-api.newrelic.com:443, HTTP status=202
+{"requestId":"a143f525-0001-bbf3-37b3-019cb7808c7d"}
+[2026/03/03 22:21:19.93881000] [ info] [output:http:http.0] log-api.newrelic.com:443, HTTP status=202
+{"requestId":"420a04c4-0001-bb71-9d8c-019cb7820b5a"}
