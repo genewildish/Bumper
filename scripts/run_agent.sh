@@ -41,10 +41,33 @@ nr_event() {
 
 log_event "agent_start" "{}"
 nr_event "agent_start" "{}"
+PROMPT_ENV_FILE=${PROMPT_ENV_FILE:-.agent_prompt.env}
+if [[ -f "$PROMPT_ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$PROMPT_ENV_FILE"
+  set +a
+fi
+
+SYSTEM_PROMPT=$(python3 - <<'PY'
+import os
+import re
+from pathlib import Path
+
+text = Path("AGENT_PROMPT.md").read_text(encoding="utf-8")
+pattern = re.compile(r"\$\{(REC_[A-Z0-9_]+)\}")
+
+def replace(match):
+    key = match.group(1)
+    return os.environ.get(key, match.group(0))
+
+print(pattern.sub(replace, text), end="")
+PY
+)
 
 aider \
   --model claude-haiku-4-5-20251001 \
-  --system-prompt "$(cat AGENT_PROMPT.md)" \
+  --system-prompt "$SYSTEM_PROMPT" \
   --message "$(cat tasks/${TASK}.md)" \
   --yes-always \
   --no-auto-commits \
