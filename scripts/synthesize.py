@@ -51,6 +51,27 @@ def get_mode() -> str:
     except Exception:
         return "portable"
 
+def infer_log_mode(events: list[dict]) -> str:
+    inferred_modes: set[str] = set()
+    for event in events:
+        event_type = event.get("event", "")
+        data = event.get("data")
+
+        if isinstance(data, dict) and data.get("mode") in {"portable", "full-warp"}:
+            inferred_modes.add(data["mode"])
+
+        if event_type.startswith("warp_session_"):
+            inferred_modes.add("full-warp")
+
+        if event_type in {"agent_start", "agent_done", "agent_error", "output"}:
+            inferred_modes.add("portable")
+
+    if not inferred_modes:
+        return "unknown"
+    if len(inferred_modes) == 1:
+        return next(iter(inferred_modes))
+    return "mixed"
+
 
 def get_git_log() -> str:
     try:
@@ -513,16 +534,29 @@ def main() -> None:
         sys.exit(1)
 
     log_file = sys.argv[1]
-    mode = get_mode()
-    started_at = time.time()
-    session_id = Path(log_file).stem
+    configured_mode = get_mode()
     has_api_key = bool(os.getenv("ANTHROPIC_API_KEY"))
-    llm_enabled = mode == "portable" and anthropic is not None and has_api_key
+
+    print(f"Loading events from {log_file}...")
+    events = load_events(log_file)
+    log_mode = infer_log_mode(events)
+    mode = log_mode if log_mode in {"portable", "full-warp"} else configured_mode
+
+    if log_mode in {"portable", "full-warp"} and configured_mode != log_mode:
+        print(
+            f"WARNING: Mode mismatch detected (configured='{configured_mode}', log='{log_mode}'). "
+            "Continuing with mode-agnostic LLM eligibility."
+        )
+    elif log_mode == "mixed":
+        print(
+            "WARNING: Mixed mode signals detected in the log (both portable and full-warp markers found). "
+            "Continuing with mode-agnostic LLM eligibility."
+        )
+
+    llm_enabled = anthropic is not None and has_api_key
     llm_reason = ""
     if not llm_enabled:
-        if mode != "portable":
-            llm_reason = f"mode is '{mode}'"
-        elif anthropic is None:
+        if anthropic is None:
             llm_reason = "anthropic package is unavailable"
         else:
             llm_reason = "ANTHROPIC_API_KEY is missing"
@@ -537,105 +571,60 @@ def main() -> None:
         },
     )
     client = anthropic.Anthropic() if llm_enabled else None
-    try:
-        print(f"Loading events from {log_file}...")
-        events = load_events(log_file)
-        stats = get_session_stats(events)
-        git_log = get_git_log()
-        git_commits = get_git_log_structured()
+    stats = get_session_stats(events)
+    git_log = get_git_log()
+    git_commits = get_git_log_structured()
 
-        print(f"Stats: {stats}")
-        agent_prompt = Path("AGENT_PROMPT.md").read_text(encoding="utf-8") if Path("AGENT_PROMPT.md").exists() else ""
-        facts = build_facts(events, stats, git_commits)
+    print(f"Stats: {stats}")
+    agent_prompt = Path("AGENT_PROMPT.md").read_text(encoding="utf-8") if Path("AGENT_PROMPT.md").exists() else ""
+    facts = build_facts(events, stats, git_commits)
 
-        all_annotations = []
-        if llm_enabled:
-            tasks = set(e.get("task") for e in events if e.get("task"))
-            for task in tasks:
-                task_events = [e for e in events if e.get("task") == task]
-                chunks = chunk_output_events(task_events)
-                print(f"Annotating {task}: {len(chunks)} chunks...")
-                for i, chunk in enumerate(chunks):
-                    if chunk.strip():
-                        all_annotations.append(annotate_chunk(client, chunk, task, i + 1))
+    all_annotations = []
+    if llm_enabled:
+        tasks = set(e.get("task") for e in events if e.get("task"))
+        for task in tasks:
+            task_events = [e for e in events if e.get("task") == task]
+            chunks = chunk_output_events(task_events)
+            print(f"Annotating {task}: {len(chunks)} chunks...")
+            for i, chunk in enumerate(chunks):
+                if chunk.strip():
+                    all_annotations.append(annotate_chunk(client, chunk, task, i + 1))
 
-        session_date = datetime.now().strftime("%Y-%m-%d-%H%M")
-        Path("outputs").mkdir(exist_ok=True)
-        facts_file = f"outputs/{session_date}-facts.json"
-        narrative_a_file = f"outputs/{session_date}-narrative-pass-a.md"
-        narrative_b_file = f"outputs/{session_date}-narrative-pass-b.md"
-        narrative_file = f"outputs/{session_date}-narrative.md"
-        uncertainty_file = f"outputs/{session_date}-uncertainty.json"
+    session_date = datetime.now().strftime("%Y-%m-%d-%H%M")
+    Path("outputs").mkdir(exist_ok=True)
+    facts_file = f"outputs/{session_date}-facts.json"
+    narrative_a_file = f"outputs/{session_date}-narrative-pass-a.md"
+    narrative_b_file = f"outputs/{session_date}-narrative-pass-b.md"
+    narrative_file = f"outputs/{session_date}-narrative.md"
+    uncertainty_file = f"outputs/{session_date}-uncertainty.json"
 
-        Path(facts_file).write_text(json.dumps(facts, indent=2), encoding="utf-8")
+    Path(facts_file).write_text(json.dumps(facts, indent=2), encoding="utf-8")
 
-        if llm_enabled:
-            print("Synthesizing analysis pass A...")
-            narrative_a = synthesize_analysis_pass(client, all_annotations, stats, git_log, agent_prompt, facts, "A")
-            print("Synthesizing analysis pass B...")
-            narrative_b = synthesize_analysis_pass(client, all_annotations, stats, git_log, agent_prompt, facts, "B")
-            uncertainty = build_uncertainty_report(narrative_a, narrative_b, facts)
-            print("Synthesizing final consolidated narrative...")
-            final_narrative = synthesize_final_narrative(
-                client,
-                stats,
-                git_log,
-                agent_prompt,
-                facts,
-                narrative_a,
-                narrative_b,
-                uncertainty,
-            )
-        else:
-            print(f"LLM synthesis skipped ({llm_reason}); generating facts-only narrative.")
-            narrative_a = synthesize_without_llm(
-                stats,
-                facts,
-                mode,
-                llm_reason,
-                include_recommendations=False,
-            )
-            narrative_b = f"# Pass B skipped\n\nReason: {llm_reason}\n\n" + narrative_a
-            final_narrative = synthesize_without_llm(
-                stats,
-                facts,
-                mode,
-                llm_reason,
-                include_recommendations=True,
-            )
-            uncertainty = {
-                "schema_version": 1,
-                "llm_synthesis": "skipped",
-                "reason": llm_reason,
-                "mode": mode,
-                "notes": [
-                    "Use facts file and raw logs for manual interpretation.",
-                    "Set portable mode and ANTHROPIC_API_KEY to enable dual-pass narratives.",
-                ],
-            }
-        final_narrative = assign_recommendation_ids(final_narrative)
-        Path(narrative_a_file).write_text(narrative_a, encoding="utf-8")
-        Path(narrative_b_file).write_text(narrative_b, encoding="utf-8")
-        Path(narrative_file).write_text(final_narrative, encoding="utf-8")
-        Path(uncertainty_file).write_text(json.dumps(uncertainty, indent=2), encoding="utf-8")
-
-        duration_sec = int(time.time() - started_at)
-        emit_nr_event(
-            "synthesis_done",
-            {
-                "session": session_id,
-                "task": "synthesis",
-                "mode": mode,
-                "llm_enabled": llm_enabled,
-                "duration_sec": duration_sec,
-                "event_count": len(events),
-                "task_count": len(stats.get("tasks", [])),
-                "agent_count": len(stats.get("agents", [])),
-                "errors": stats.get("errors", 0),
-                "canceled": stats.get("canceled", 0),
-                "duration_sec_total": stats.get("duration_sec_total", 0),
-                "output_lines_total": stats.get("output_lines_total", 0),
-            },
+    if llm_enabled:
+        print("Synthesizing analysis pass A...")
+        narrative_a = synthesize_analysis_pass(client, all_annotations, stats, git_log, agent_prompt, facts, "A")
+        print("Synthesizing analysis pass B...")
+        narrative_b = synthesize_analysis_pass(client, all_annotations, stats, git_log, agent_prompt, facts, "B")
+        uncertainty = build_uncertainty_report(narrative_a, narrative_b, facts)
+        print("Synthesizing final consolidated narrative...")
+        final_narrative = synthesize_final_narrative(
+            client,
+            stats,
+            git_log,
+            agent_prompt,
+            facts,
+            narrative_a,
+            narrative_b,
+            uncertainty,
+        )
+    else:
+        print(f"LLM synthesis skipped ({llm_reason}); generating facts-only narrative.")
+        narrative_a = synthesize_without_llm(
+            stats,
+            facts,
+            mode,
+            llm_reason,
+            include_recommendations=False,
         )
         print(f"\nFacts written to: {facts_file}")
         print(f"Narrative (pass A) written to: {narrative_a_file}")
@@ -657,7 +646,29 @@ def main() -> None:
                 "error": str(exc)[:512],
             },
         )
-        raise
+        uncertainty = {
+            "schema_version": 1,
+            "llm_synthesis": "skipped",
+            "reason": llm_reason,
+            "mode": mode,
+            "notes": [
+                "Use facts file and raw logs for manual interpretation.",
+                "Set ANTHROPIC_API_KEY and ensure the anthropic package is available to enable dual-pass narratives.",
+            ],
+        }
+    final_narrative = assign_recommendation_ids(final_narrative)
+    Path(narrative_a_file).write_text(narrative_a, encoding="utf-8")
+    Path(narrative_b_file).write_text(narrative_b, encoding="utf-8")
+    Path(narrative_file).write_text(final_narrative, encoding="utf-8")
+    Path(uncertainty_file).write_text(json.dumps(uncertainty, indent=2), encoding="utf-8")
+
+    print(f"\nFacts written to: {facts_file}")
+    print(f"Narrative (pass A) written to: {narrative_a_file}")
+    print(f"Narrative (pass B) written to: {narrative_b_file}")
+    print(f"Final narrative written to: {narrative_file}")
+    print(f"Uncertainty report written to: {uncertainty_file}")
+    print("\n--- PREVIEW ---")
+    print(final_narrative[:500] + "...")
 
 
 if __name__ == "__main__":
