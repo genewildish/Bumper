@@ -20,8 +20,36 @@ fi
 SESSION_ID=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 AGENT_ID="agent-$$"
 LOG_FILE="logs/${SESSION_ID//:/}.jsonl"
+START_TS=$(date +%s)
 
 mkdir -p logs
+git_branch() {
+  git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
+}
+
+git_head() {
+  git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+}
+
+git_dirty() {
+  if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+git_base_ref() {
+  local base
+  base=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/@@')
+  echo "${base:-origin/main}"
+}
+
+git_commits_ahead() {
+  local base_ref
+  base_ref=$(git_base_ref)
+  git --no-pager log --oneline "${base_ref}..HEAD" 2>/dev/null | wc -l | tr -d ' '
+}
 
 log_event() {
   echo "{\"event\":\"$1\",\"agent\":\"$AGENT_ID\",\"task\":\"$TASK\",\"session\":\"$SESSION_ID\",\"ts\":$(date +%s),\"data\":$2}" >> "$LOG_FILE"
@@ -38,9 +66,22 @@ nr_event() {
     -d "[{\"eventType\":\"WintermuteEvent\",\"event\":\"${EVENT_TYPE}\",\"agent\":\"${AGENT_ID}\",\"task\":\"${TASK}\",\"session\":\"${SESSION_ID}\",\"project\":\"$(basename "$(pwd)")\",${PAYLOAD:1}}]" \
     > /dev/null || true
 }
+START_PAYLOAD="{\"mode\":\"${MODE}\",\"branch\":\"$(git_branch)\",\"head\":\"$(git_head)\",\"base_ref\":\"$(git_base_ref)\",\"commits_ahead\":$(git_commits_ahead),\"dirty\":$(git_dirty)}"
+log_event "agent_start" "$START_PAYLOAD"
+nr_event "agent_start" "$START_PAYLOAD"
 
-log_event "agent_start" "{}"
-nr_event "agent_start" "{}"
+on_cancel() {
+  END_TS=$(date +%s)
+  DURATION=$((END_TS - START_TS))
+  CANCEL_PAYLOAD="{\"mode\":\"${MODE}\",\"duration_sec\":${DURATION},\"branch\":\"$(git_branch)\",\"head\":\"$(git_head)\",\"base_ref\":\"$(git_base_ref)\",\"commits_ahead\":$(git_commits_ahead),\"dirty\":$(git_dirty)}"
+  log_event "agent_canceled" "$CANCEL_PAYLOAD"
+  nr_event "agent_canceled" "$CANCEL_PAYLOAD"
+  echo ""
+  echo "Session canceled. Log: $LOG_FILE"
+  exit 130
+}
+
+trap on_cancel INT TERM
 PROMPT_ENV_FILE=${PROMPT_ENV_FILE:-.agent_prompt.env}
 if [[ -f "$PROMPT_ENV_FILE" ]]; then
   set -a
@@ -78,18 +119,24 @@ aider \
 
 AIDER_EXIT=${PIPESTATUS[0]}
 if [[ $AIDER_EXIT -ne 0 ]]; then
-  log_event "agent_error" "{\"exit_code\":$AIDER_EXIT}"
-  nr_event "agent_error" "{\"exit_code\":$AIDER_EXIT}"
+  END_TS=$(date +%s)
+  DURATION=$((END_TS - START_TS))
+  OUTPUT_LINES=$(grep -c '"event":"output"' "$LOG_FILE" 2>/dev/null || echo 0)
+  ERROR_PAYLOAD="{\"exit_code\":$AIDER_EXIT,\"mode\":\"${MODE}\",\"duration_sec\":${DURATION},\"output_lines\":${OUTPUT_LINES},\"branch\":\"$(git_branch)\",\"head\":\"$(git_head)\",\"base_ref\":\"$(git_base_ref)\",\"commits_ahead\":$(git_commits_ahead),\"dirty\":$(git_dirty)}"
+  log_event "agent_error" "$ERROR_PAYLOAD"
+  nr_event "agent_error" "$ERROR_PAYLOAD"
   echo ""
   echo "Session log: $LOG_FILE"
   exit $AIDER_EXIT
 fi
-
-BASE_REF=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/@@')
-BASE_REF=${BASE_REF:-origin/main}
-COMMITS=$(git --no-pager log --oneline "${BASE_REF}..HEAD" 2>/dev/null | wc -l | tr -d ' ')
-log_event "agent_done" "{\"commits\":$COMMITS}"
-nr_event "agent_done" "{\"commits\":$COMMITS}"
+END_TS=$(date +%s)
+DURATION=$((END_TS - START_TS))
+BASE_REF=$(git_base_ref)
+COMMITS=$(git_commits_ahead)
+OUTPUT_LINES=$(grep -c '"event":"output"' "$LOG_FILE" 2>/dev/null || echo 0)
+DONE_PAYLOAD="{\"commits\":$COMMITS,\"mode\":\"${MODE}\",\"duration_sec\":${DURATION},\"output_lines\":${OUTPUT_LINES},\"branch\":\"$(git_branch)\",\"head\":\"$(git_head)\",\"base_ref\":\"${BASE_REF}\",\"commits_ahead\":$(git_commits_ahead),\"dirty\":$(git_dirty)}"
+log_event "agent_done" "$DONE_PAYLOAD"
+nr_event "agent_done" "$DONE_PAYLOAD"
 
 echo ""
 echo "Session log: $LOG_FILE"
