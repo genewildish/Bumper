@@ -5,3 +5,5 @@ build/
 *.xccheckout
 *.xcscmblueprint
 xcuserdata/
+logs/fluent-bit-tail.db
+logs/fluent-bit-tail.db.*

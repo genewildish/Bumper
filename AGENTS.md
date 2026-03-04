@@ -67,3 +67,4 @@ State is persisted as JSON to `~/Library/Application Support/Bumper/state.json` 
   - `full-warp` mode logs a start event and expects manual task execution in Warp; close with `scripts/record_warp_session.sh`.
 - `scripts/synthesize.py logs/<session>.jsonl` produces session narratives in `outputs/` (model-backed in portable mode, facts-only fallback otherwise).
 - `scripts/nr_query.py <session_id>` fetches `WintermuteEvent` timeline from New Relic when API credentials are configured.
+- Optional sidecar log shipping to New Relic Logs is provided by `scripts/run_fluent_bit.sh` with config `scripts/fluent-bit-newrelic.conf` (tail input on `logs/*.jsonl`, `newrelic` output).

@@ -26,7 +26,7 @@ Bumper is an iOS app for tallying small debts between friends or family, then au
 - `wintermute.config.json` — mode toggle (`portable` vs `full-warp`).
 - `tasks/` — one markdown file per task.
 - `logs/` and `outputs/` — session logs and synthesis narratives.
-- `scripts/` — Wintermute runtime scripts (`run_session.sh`, `run_agent.sh`, `record_warp_session.sh`, `wintermute_mode.py`, `synthesize.py`, `prompt_evaluator.py`, `nr_query.py`).
+- `scripts/` — Wintermute runtime scripts (`run_session.sh`, `run_agent.sh`, `record_warp_session.sh`, `wintermute_mode.py`, `synthesize.py`, `prompt_evaluator.py`, `nr_query.py`, `run_fluent_bit.sh`, `fluent-bit-newrelic.conf`).
 
 ## Run in Xcode
 1. Open `Bumper.xcodeproj` in Xcode.
@@ -91,6 +91,11 @@ This repo supports two switchable execution modes:
    python3 scripts/prompt_evaluator.py outputs/<session>-narrative.md
    ```
    If Anthropic access is unavailable, this exits cleanly and you can review `AGENT_PROMPT.md` manually.
+10. Optional full line-level logs to New Relic via Fluent Bit sidecar:
+   ```bash
+   ./scripts/run_fluent_bit.sh
+   ```
+   Run this in a separate terminal before starting sessions. It tails `logs/*.jsonl` and forwards records with the `newrelic` output plugin.
 
 Review these generated files before acting on recommendations:
 - `outputs/<session>-facts.json` (authoritative machine-derived facts)
