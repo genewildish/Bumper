@@ -23,6 +23,29 @@ if [[ "$MODE" == "full-warp" ]]; then
   AGENT_ID="warp-manual-$$"
   LOG_FILE="logs/${SESSION_ID//:/}.jsonl"
   mkdir -p logs
+  git_branch() {
+    git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
+  }
+  git_head() {
+    git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+  }
+  git_dirty() {
+    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+      echo "true"
+    else
+      echo "false"
+    fi
+  }
+  git_base_ref() {
+    local base
+    base=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/@@')
+    echo "${base:-origin/main}"
+  }
+  git_commits_ahead() {
+    local base_ref
+    base_ref=$(git_base_ref)
+    git --no-pager log --oneline "${base_ref}..HEAD" 2>/dev/null | wc -l | tr -d ' '
+  }
   
   # New Relic event helper
   nr_event() {
@@ -38,8 +61,9 @@ if [[ "$MODE" == "full-warp" ]]; then
       > /dev/null || true
   }
   
-  echo "{\"event\":\"warp_session_start\",\"agent\":\"$AGENT_ID\",\"task\":\"$TASK\",\"session\":\"$SESSION_ID\",\"ts\":$(date +%s),\"data\":{\"mode\":\"full-warp\"}}" >> "$LOG_FILE"
-  nr_event "warp_session_start" "{\"mode\":\"full-warp\"}"
+  START_PAYLOAD="{\"mode\":\"full-warp\",\"branch\":\"$(git_branch)\",\"head\":\"$(git_head)\",\"base_ref\":\"$(git_base_ref)\",\"commits_ahead\":$(git_commits_ahead),\"dirty\":$(git_dirty),\"cwd\":\"$(pwd)\"}"
+  echo "{\"event\":\"warp_session_start\",\"agent\":\"$AGENT_ID\",\"task\":\"$TASK\",\"session\":\"$SESSION_ID\",\"ts\":$(date +%s),\"data\":${START_PAYLOAD}}" >> "$LOG_FILE"
+  nr_event "warp_session_start" "$START_PAYLOAD"
 
   echo "Mode: full-warp"
   echo "Session log: $LOG_FILE"
