@@ -7,3 +7,5 @@ build/
 xcuserdata/
 logs/fluent-bit-tail.db
 logs/fluent-bit-tail.db.*
+.env
+.env.*
