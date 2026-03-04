@@ -90,8 +90,9 @@ This repo supports two switchable execution modes:
    ```bash
    python3 scripts/synthesize.py logs/<session>.jsonl
    ```
-   - In `portable` mode + API key: dual-pass analysis drafts plus one final consolidated narrative.
-   - In `full-warp` mode, or without API key, or without the `anthropic` package: facts-first deterministic narrative (no model call).
+   - With `ANTHROPIC_API_KEY` + `anthropic` package available: dual-pass analysis drafts plus one final consolidated narrative (mode-agnostic).
+   - Without API key or without the `anthropic` package: facts-first deterministic narrative (no model call).
+   - If configured mode and log-inferred mode differ, synthesis prints a warning and proceeds.
 9. Optional prompt review:
    ```bash
    python3 scripts/prompt_evaluator.py outputs/<session>-narrative.md

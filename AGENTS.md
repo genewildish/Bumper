@@ -71,6 +71,7 @@ State is persisted as JSON to `~/Library/Application Support/Bumper/state.json` 
   - `portable` mode routes to `scripts/run_agent.sh` (aider flow).
   - `full-warp` mode logs a start event and expects manual task execution in Warp; close with `scripts/record_warp_session.sh`.
 - `scripts/synthesize.py logs/<session>.jsonl` produces analysis pass files plus a final narrative in `outputs/`; prompt recommendations are included only in `outputs/<session>-narrative.md`.
-  - In `portable` mode, model-backed synthesis requires both `ANTHROPIC_API_KEY` and the `anthropic` Python package.
+  - Model-backed synthesis is mode-agnostic and requires both `ANTHROPIC_API_KEY` and the `anthropic` Python package.
+  - If configured mode and log-inferred mode differ, the script prints a warning and continues.
 - `scripts/nr_query.py <session_id>` fetches `WintermuteEvent` timeline from New Relic when API credentials are configured.
 - Optional sidecar log shipping to New Relic Logs is provided by `scripts/run_fluent_bit.sh` with config `scripts/fluent-bit-newrelic.conf` (tail input on `logs/*.jsonl`, `newrelic` output).
