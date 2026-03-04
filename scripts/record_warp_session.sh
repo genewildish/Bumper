@@ -26,9 +26,36 @@ case "$STATUS" in
     ;;
 esac
 
-BASE_REF=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/@@')
-BASE_REF=${BASE_REF:-origin/main}
-COMMITS=$(git --no-pager log --oneline "${BASE_REF}..HEAD" 2>/dev/null | wc -l | tr -d ' ')
+git_branch() {
+  git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
+}
+
+git_head() {
+  git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+}
+
+git_dirty() {
+  if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+git_base_ref() {
+  local base
+  base=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/@@')
+  echo "${base:-origin/main}"
+}
+
+git_commits_ahead() {
+  local base_ref
+  base_ref=$(git_base_ref)
+  git --no-pager log --oneline "${base_ref}..HEAD" 2>/dev/null | wc -l | tr -d ' '
+}
+
+BASE_REF=$(git_base_ref)
+COMMITS=$(git_commits_ahead)
 
 # New Relic event helper
 nr_event() {
@@ -46,8 +73,37 @@ nr_event() {
 }
 
 SESSION_ID=$(basename "$LOG_FILE" .jsonl)
+START_TS=$(python3 - "$LOG_FILE" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+start_ts = 0
+with open(path, encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except Exception:
+            continue
+        if event.get("event") == "warp_session_start":
+            ts = event.get("ts")
+            if isinstance(ts, int):
+                start_ts = ts
+            break
+print(start_ts)
+PY
+)
+NOW_TS=$(date +%s)
+DURATION=0
+if [[ "${START_TS}" =~ ^[0-9]+$ ]] && [[ "${START_TS}" -gt 0 ]]; then
+  DURATION=$((NOW_TS - START_TS))
+fi
 EVENT="warp_session_${STATUS}"
-echo "{\"event\":\"$EVENT\",\"agent\":\"warp-manual\",\"task\":\"$TASK\",\"session\":\"$SESSION_ID\",\"ts\":$(date +%s),\"data\":{\"commits\":$COMMITS,\"mode\":\"full-warp\"}}" >> "$LOG_FILE"
-nr_event "$EVENT" "{\"commits\":$COMMITS,\"mode\":\"full-warp\"}" "$SESSION_ID"
+PAYLOAD="{\"commits\":$COMMITS,\"mode\":\"full-warp\",\"duration_sec\":${DURATION},\"branch\":\"$(git_branch)\",\"head\":\"$(git_head)\",\"base_ref\":\"${BASE_REF}\",\"commits_ahead\":$(git_commits_ahead),\"dirty\":$(git_dirty)}"
+echo "{\"event\":\"$EVENT\",\"agent\":\"warp-manual\",\"task\":\"$TASK\",\"session\":\"$SESSION_ID\",\"ts\":$(date +%s),\"data\":${PAYLOAD}}" >> "$LOG_FILE"
+nr_event "$EVENT" "$PAYLOAD" "$SESSION_ID"
 
 echo "Recorded $EVENT to $LOG_FILE (commits since ${BASE_REF}: $COMMITS)"

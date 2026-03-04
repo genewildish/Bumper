@@ -56,6 +56,7 @@ State is persisted as JSON to `~/Library/Application Support/Bumper/state.json` 
 - **Constraints**: Per-bump increments are clamped between $0.25 and $5.00
 - **Thresholds**: Minimum payout threshold is $5.00
 - **Commit style**: Small, focused commits; avoid unrelated refactors
+- **Code comments**: Mandatory on all non-trivial code. Every function, computed property, and type must have a doc comment. Inline comments are required for any logic that is not immediately obvious.
 
 ## Wintermute Agent Loop
 - Set/check mode with `python3 scripts/wintermute_mode.py` and `python3 scripts/wintermute_mode.py set <portable|full-warp>`.

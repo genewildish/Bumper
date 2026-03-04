@@ -26,6 +26,7 @@ Over time, the narrative documents feed back into an evolving agent system promp
 - **Synthesis**: Python script calling Anthropic API post-session
 
 No Docker. No daemons. No external services. Own every line.
+Secrets rule: load Anthropic and New Relic credentials via environment variables sourced from a local secrets file; never paste raw keys into tracked files or shell history.
 
 ---
 
@@ -356,7 +357,7 @@ claimed_at: null
 Before running your first session:
 
 - [ ] `pip install aider-chat anthropic` (or your preferred env setup)
-- [ ] `export ANTHROPIC_API_KEY=sk-ant-...`
+- [ ] Source a local secrets file that exports `ANTHROPIC_API_KEY` (and optional New Relic vars); do not paste raw keys into your shell history
 - [ ] Fill in `WARP.md` with actual project context
 - [ ] Write 1-3 task files in `tasks/`
 - [ ] Review `AGENT_PROMPT.md` and adjust for your project conventions
@@ -425,6 +426,7 @@ New Relic is included from the start. JSONL remains the local buffer — New Rel
 ### Environment setup
 
 ```bash
+# Source a local secrets file — do not paste raw keys into tracked files
 export NEW_RELIC_LICENSE_KEY=...
 export NEW_RELIC_ACCOUNT_ID=...
 ```
@@ -504,6 +506,32 @@ FACET event
 -- Sessions over time
 SELECT uniqueCount(session) FROM WintermuteEvent 
 FACET project TIMESERIES daily SINCE 30 days ago
+
+-- Session/agent runtime distribution
+SELECT percentile(duration_sec, 50, 90, 99) FROM WintermuteEvent
+WHERE event IN ('agent_done', 'agent_error', 'agent_canceled', 'warp_session_done', 'warp_session_error', 'warp_session_canceled')
+SINCE 7 days ago FACET event
+
+-- Cancellation rate over time
+SELECT percentage(count(*), WHERE event IN ('agent_canceled', 'warp_session_canceled'))
+FROM WintermuteEvent
+WHERE event IN (
+  'agent_start','agent_done','agent_error','agent_canceled',
+  'warp_session_start','warp_session_done','warp_session_error','warp_session_canceled'
+)
+SINCE 7 days ago TIMESERIES
+
+-- Synthesis health and latency
+SELECT count(*) FROM WintermuteEvent
+WHERE event IN ('synthesis_start','synthesis_done','synthesis_error')
+FACET event SINCE 7 days ago
+
+SELECT average(duration_sec), percentile(duration_sec, 95) FROM WintermuteEvent
+WHERE event = 'synthesis_done' SINCE 7 days ago
+
+-- Average output volume per completed run (portable mode)
+SELECT average(output_lines) FROM WintermuteEvent
+WHERE event = 'agent_done' SINCE 7 days ago
 ```
 
 ### Alert to add immediately

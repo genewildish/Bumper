@@ -15,8 +15,10 @@ import re
 import hashlib
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
+from urllib import request
 try:
     import anthropic
 except Exception:
@@ -115,18 +117,63 @@ def get_session_stats(events: list[dict]) -> dict:
     tasks = set(e.get("task") for e in events if e.get("task"))
     agents = set(e.get("agent") for e in events if e.get("agent"))
     done = [e for e in events if e.get("event") == "agent_done"]
+    warp_done = [e for e in events if e.get("event") == "warp_session_done"]
     errors = [e for e in events if e.get("event") == "agent_error"]
+    warp_errors = [e for e in events if e.get("event") == "warp_session_error"]
+    canceled = [e for e in events if e.get("event") in {"agent_canceled", "warp_session_canceled"}]
     total_commits = sum(
         int(e.get("data", {}).get("commits", 0)) if isinstance(e.get("data"), dict) else 0
         for e in done
     )
+    total_commits += sum(
+        int(e.get("data", {}).get("commits", 0)) if isinstance(e.get("data"), dict) else 0
+        for e in warp_done
+    )
+    duration_sec_total = 0
+    output_lines_total = 0
+    for event in events:
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        duration_sec_total += int(data.get("duration_sec", 0) or 0)
+        output_lines_total += int(data.get("output_lines", 0) or 0)
     return {
         "tasks": sorted(tasks),
         "agents": sorted(agents),
         "total_commits": total_commits,
-        "errors": len(errors),
+        "errors": len(errors) + len(warp_errors),
+        "canceled": len(canceled),
+        "duration_sec_total": duration_sec_total,
+        "output_lines_total": output_lines_total,
         "duration_events": len(events),
     }
+
+
+def emit_nr_event(event_type: str, payload: dict) -> None:
+    license_key = os.getenv("NEW_RELIC_LICENSE_KEY")
+    account_id = os.getenv("NEW_RELIC_ACCOUNT_ID")
+    if not license_key or not account_id:
+        return
+    event = {
+        "eventType": "WintermuteEvent",
+        "event": event_type,
+        "agent": "wintermute-synthesizer",
+        "task": payload.get("task", "synthesis"),
+        "session": payload.get("session", "unknown"),
+        "project": os.path.basename(os.getcwd()),
+    }
+    event.update(payload)
+    req = request.Request(
+        f"https://insights-collector.newrelic.com/v1/accounts/{account_id}/events",
+        data=json.dumps([event]).encode("utf-8"),
+        headers={"Api-Key": license_key, "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with request.urlopen(req, timeout=5):
+            pass
+    except Exception:
+        pass
 
 
 def build_facts(events: list[dict], stats: dict, commits: list[dict]) -> dict:
@@ -197,17 +244,20 @@ def synthesize_without_llm(
 
     done_events = facts.get("event_counts", {}).get("agent_done", 0) + facts.get("event_counts", {}).get("warp_session_done", 0)
     error_events = facts.get("event_counts", {}).get("agent_error", 0) + facts.get("event_counts", {}).get("warp_session_error", 0)
+    canceled_events = facts.get("event_counts", {}).get("agent_canceled", 0) + facts.get("event_counts", {}).get("warp_session_canceled", 0)
     started_events = facts.get("event_counts", {}).get("agent_start", 0) + facts.get("event_counts", {}).get("warp_session_start", 0)
 
     lines = [
         "# Session Summary",
         f"Mode: `{mode}`. LLM synthesis was skipped because {reason}.",
-        f"Observed {started_events} session starts, {done_events} session completions, and {error_events} error events {evt_ref}.",
+        f"Observed {started_events} session starts, {done_events} session completions, {error_events} error events, and {canceled_events} cancellations {evt_ref}.",
         "",
         "# What Agents Did",
         f"Tasks touched: {', '.join(stats.get('tasks', [])) or '(none)'} {evt_ref}",
         f"Agents observed: {', '.join(stats.get('agents', [])) or '(none)'} {evt_ref}",
         f"Total commits counted from terminal events: {stats.get('total_commits', 0)} {evt_ref}",
+        f"Aggregate observed runtime (sec): {stats.get('duration_sec_total', 0)} {evt_ref}",
+        f"Captured output lines: {stats.get('output_lines_total', 0)} {evt_ref}",
         "",
         "# What Worked",
         f"Machine-derived facts and structured git history were generated successfully {evt_ref} {git_ref}.",
@@ -510,6 +560,16 @@ def main() -> None:
             llm_reason = "anthropic package is unavailable"
         else:
             llm_reason = "ANTHROPIC_API_KEY is missing"
+    emit_nr_event(
+        "synthesis_start",
+        {
+            "session": session_id,
+            "task": "synthesis",
+            "mode": mode,
+            "llm_enabled": llm_enabled,
+            "log_file": log_file,
+        },
+    )
     client = anthropic.Anthropic() if llm_enabled else None
     stats = get_session_stats(events)
     git_log = get_git_log()
@@ -566,13 +626,25 @@ def main() -> None:
             llm_reason,
             include_recommendations=False,
         )
-        narrative_b = f"# Pass B skipped\n\nReason: {llm_reason}\n\n" + narrative_a
-        final_narrative = synthesize_without_llm(
-            stats,
-            facts,
-            mode,
-            llm_reason,
-            include_recommendations=True,
+        print(f"\nFacts written to: {facts_file}")
+        print(f"Narrative (pass A) written to: {narrative_a_file}")
+        print(f"Narrative (pass B) written to: {narrative_b_file}")
+        print(f"Final narrative written to: {narrative_file}")
+        print(f"Uncertainty report written to: {uncertainty_file}")
+        print("\n--- PREVIEW ---")
+        print(final_narrative[:500] + "...")
+    except Exception as exc:
+        duration_sec = int(time.time() - started_at)
+        emit_nr_event(
+            "synthesis_error",
+            {
+                "session": session_id,
+                "task": "synthesis",
+                "mode": mode,
+                "llm_enabled": llm_enabled,
+                "duration_sec": duration_sec,
+                "error": str(exc)[:512],
+            },
         )
         uncertainty = {
             "schema_version": 1,
