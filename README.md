@@ -55,9 +55,9 @@ This repo supports two switchable execution modes:
    ```bash
    pip install aider-chat anthropic
    ```
-3. Configure credentials (only required when you want model-backed runs/synthesis):
+3. Configure credentials (only required when you want model-backed runs/synthesis). Load these from a secrets file — do not export raw keys directly in your shell history:
    ```bash
-   export ANTHROPIC_API_KEY=sk-ant-...
+   export ANTHROPIC_API_KEY=...
    ```
    Optional New Relic event streaming:
    ```bash

@@ -18,6 +18,7 @@ The core user action is a one-tap "Bump $amount" increment on each debt.
 - Minimum payout threshold is `$5.00`.
 - Keep commits focused and avoid unrelated refactors.
 - Prefer behavior-driven tests for meaningful flows; use targeted unit tests for isolated logic.
+- For Wintermute/Oz workflows, source Anthropic and New Relic credentials from environment variables loaded by a secrets file path variable.
 
 ## Constraints
 - Do not change payout semantics without an explicit task:

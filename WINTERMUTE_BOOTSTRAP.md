@@ -26,6 +26,7 @@ Over time, the narrative documents feed back into an evolving agent system promp
 - **Synthesis**: Python script calling Anthropic API post-session
 
 No Docker. No daemons. No external services. Own every line.
+Secrets rule: load Anthropic and New Relic credentials via environment variables sourced from a local secrets file; never paste raw keys into tracked files or shell history.
 
 ---
 
@@ -356,7 +357,7 @@ claimed_at: null
 Before running your first session:
 
 - [ ] `pip install aider-chat anthropic` (or your preferred env setup)
-- [ ] `export ANTHROPIC_API_KEY=sk-ant-...`
+- [ ] Source a local secrets file that exports `ANTHROPIC_API_KEY` (and optional New Relic vars); do not paste raw keys into your shell history
 - [ ] Fill in `WARP.md` with actual project context
 - [ ] Write 1-3 task files in `tasks/`
 - [ ] Review `AGENT_PROMPT.md` and adjust for your project conventions
@@ -425,6 +426,7 @@ New Relic is included from the start. JSONL remains the local buffer — New Rel
 ### Environment setup
 
 ```bash
+# Source a local secrets file — do not paste raw keys into tracked files
 export NEW_RELIC_LICENSE_KEY=...
 export NEW_RELIC_ACCOUNT_ID=...
 ```
