@@ -84,7 +84,7 @@ This repo supports two switchable execution modes:
    ```bash
    python3 scripts/synthesize.py logs/<session>.jsonl
    ```
-   - In `portable` mode + API key: dual-pass model narratives.
+   - In `portable` mode + API key: dual-pass analysis drafts plus one final consolidated narrative.
    - In `full-warp` mode or without key: facts-first deterministic narrative (no model call).
 9. Optional prompt review:
    ```bash
@@ -99,8 +99,9 @@ This repo supports two switchable execution modes:
 
 Review these generated files before acting on recommendations:
 - `outputs/<session>-facts.json` (authoritative machine-derived facts)
-- `outputs/<session>-narrative.md` (primary narrative)
-- `outputs/<session>-narrative-pass-b.md` (second-pass or skipped marker, mode-dependent)
+- `outputs/<session>-narrative-pass-a.md` (analysis draft A, no prompt recommendations)
+- `outputs/<session>-narrative-pass-b.md` (analysis draft B, no prompt recommendations)
+- `outputs/<session>-narrative.md` (final consolidated narrative; the only file that includes prompt recommendations)
 - `outputs/<session>-uncertainty.json` (citation diff/uncertainty report)
 
 ## Product notes
