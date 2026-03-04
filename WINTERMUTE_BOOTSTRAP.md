@@ -506,6 +506,32 @@ FACET event
 -- Sessions over time
 SELECT uniqueCount(session) FROM WintermuteEvent 
 FACET project TIMESERIES daily SINCE 30 days ago
+
+-- Session/agent runtime distribution
+SELECT percentile(duration_sec, 50, 90, 99) FROM WintermuteEvent
+WHERE event IN ('agent_done', 'agent_error', 'agent_canceled', 'warp_session_done', 'warp_session_error', 'warp_session_canceled')
+SINCE 7 days ago FACET event
+
+-- Cancellation rate over time
+SELECT percentage(count(*), WHERE event IN ('agent_canceled', 'warp_session_canceled'))
+FROM WintermuteEvent
+WHERE event IN (
+  'agent_start','agent_done','agent_error','agent_canceled',
+  'warp_session_start','warp_session_done','warp_session_error','warp_session_canceled'
+)
+SINCE 7 days ago TIMESERIES
+
+-- Synthesis health and latency
+SELECT count(*) FROM WintermuteEvent
+WHERE event IN ('synthesis_start','synthesis_done','synthesis_error')
+FACET event SINCE 7 days ago
+
+SELECT average(duration_sec), percentile(duration_sec, 95) FROM WintermuteEvent
+WHERE event = 'synthesis_done' SINCE 7 days ago
+
+-- Average output volume per completed run (portable mode)
+SELECT average(output_lines) FROM WintermuteEvent
+WHERE event = 'agent_done' SINCE 7 days ago
 ```
 
 ### Alert to add immediately

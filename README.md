@@ -97,6 +97,18 @@ This repo supports two switchable execution modes:
    ```
    Run this in a separate terminal before starting sessions. It tails `logs/*.jsonl` and forwards records with the `newrelic` output plugin.
 
+### Wintermute telemetry now captured
+When New Relic credentials are set, Wintermute emits structured `WintermuteEvent` records for:
+- Agent lifecycle: `agent_start`, `agent_done`, `agent_error`, `agent_canceled`
+- Full-warp lifecycle: `warp_session_start`, `warp_session_done`, `warp_session_error`, `warp_session_canceled`
+- Synthesis lifecycle: `synthesis_start`, `synthesis_done`, `synthesis_error`
+
+Each terminal lifecycle event includes monitorable attributes where available:
+- `duration_sec`
+- `branch`, `head`, `base_ref`, `commits_ahead`, `dirty`
+- `output_lines` (portable agent runs)
+- `mode`
+
 Review these generated files before acting on recommendations:
 - `outputs/<session>-facts.json` (authoritative machine-derived facts)
 - `outputs/<session>-narrative-pass-a.md` (analysis draft A, no prompt recommendations)
