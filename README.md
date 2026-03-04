@@ -55,6 +55,12 @@ This repo supports two switchable execution modes:
    ```bash
    pip install aider-chat anthropic
    ```
+
+   Verify anthropic is available in the active environment:
+   ```bash
+   python3 -c "import anthropic"
+   ```
+
 3. Configure credentials (only required when you want model-backed runs/synthesis). Load these from a secrets file — do not export raw keys directly in your shell history:
    ```bash
    export ANTHROPIC_API_KEY=...
@@ -85,7 +91,7 @@ This repo supports two switchable execution modes:
    python3 scripts/synthesize.py logs/<session>.jsonl
    ```
    - In `portable` mode + API key: dual-pass analysis drafts plus one final consolidated narrative.
-   - In `full-warp` mode or without key: facts-first deterministic narrative (no model call).
+   - In `full-warp` mode, or without API key, or without the `anthropic` package: facts-first deterministic narrative (no model call).
 9. Optional prompt review:
    ```bash
    python3 scripts/prompt_evaluator.py outputs/<session>-narrative.md
