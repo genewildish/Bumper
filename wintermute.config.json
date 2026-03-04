@@ -1,5 +1,5 @@
 {
-  "mode": "portable",
+  "mode": "full-warp",
   "modes": {
     "portable": {
       "description": "Aider-driven workflow (agnostic/work-safe): uses scripts/run_agent.sh and optional Anthropic/New Relic APIs."
