@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "llm_synthesis": "skipped",
+  "reason": "ANTHROPIC_API_KEY is missing",
+  "mode": "portable",
+  "notes": [
+    "Use facts file and raw logs for manual interpretation.",
+    "Set portable mode and ANTHROPIC_API_KEY to enable dual-pass narratives."
+  ]
+}
