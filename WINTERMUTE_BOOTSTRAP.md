@@ -98,7 +98,6 @@ You are a focused coding agent working on a shared codebase with other agents ru
 5. If the push is rejected, another agent claimed first — pick a different task
 6. Do the work. Commit frequently with messages like: `agent-N: [what you did and why]`
 7. When done: update task header (status: completed), add a brief note under ## Agent Notes, commit and push
-    - If your task produces a protocol, interface, or public API boundary, include a one-paragraph description of its contract in ## Agent Notes. Do not assume the code is self-documenting for agents who will not read it directly.
 8. Pick another available task or stop if none remain
 
 ## Rules
@@ -381,8 +380,9 @@ Before running your first session:
 python scripts/synthesize.py logs/[session].jsonl
 
 # HUMAN REVIEW REQUIRED - do not skip this step:
-# 1. Read the narrative in outputs/<session>-narrative.md
-# 2. Review section 7 ("Recommended AGENT_PROMPT.md Changes")
+# 1. Read the final narrative in outputs/<session>-narrative.md
+# 2. Review section 7 ("Recommended AGENT_PROMPT.md Changes") in that final file only
+#    (pass drafts are analysis-only and should not contain prompt recommendations)
 # 3. Decide which recommendations to accept (some may be session-specific overfitting)
 # 4. Manually edit AGENT_PROMPT.md based on accepted recommendations
 # 5. Update WARP.md "Current State" section with completed tasks and new architectural facts
@@ -545,8 +545,10 @@ Write tasks → Run agents → Synthesize → HUMAN REVIEW → Update AGENT_PROM
 
 ### How the loop works:
 
-1. **Synthesis produces three artifacts:**
-   - `outputs/<session>-narrative.md` — what happened, what worked, what didn't, recommendations
+1. **Synthesis produces artifacts with separated concerns:**
+   - `outputs/<session>-narrative-pass-a.md` — analysis draft A (no prompt recommendations)
+   - `outputs/<session>-narrative-pass-b.md` — analysis draft B (no prompt recommendations)
+   - `outputs/<session>-narrative.md` — final consolidated narrative (the only file with recommendations)
    - `outputs/<session>-facts.json` — authoritative machine-derived facts (events, commits)
    - `outputs/<session>-uncertainty.json` — dual-pass citation diff and confidence signals
 

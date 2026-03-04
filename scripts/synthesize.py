@@ -2,7 +2,9 @@
 """
 Post-session synthesis. Reads JSONL log + git log, produces:
 - outputs/<session>-facts.json (authoritative machine-derived facts)
-- outputs/<session>-narrative.md (LLM narrative with fact citations)
+- outputs/<session>-narrative-pass-a.md (analysis draft A, no prompt recommendations)
+- outputs/<session>-narrative-pass-b.md (analysis draft B, no prompt recommendations)
+- outputs/<session>-narrative.md (final narrative; includes prompt recommendations)
 - outputs/<session>-uncertainty.json (dual-pass disagreement and citation checks)
 Usage: python3 scripts/synthesize.py logs/[session].jsonl
 """
@@ -18,7 +20,6 @@ try:
     import anthropic
 except Exception:
     anthropic = None
-import anthropic
 
 
 def load_events(log_file: str) -> list[dict]:
@@ -160,7 +161,13 @@ OUTPUT:
     return response.content[0].text
 
 
-def synthesize_without_llm(stats: dict, facts: dict, mode: str, reason: str) -> str:
+def synthesize_without_llm(
+    stats: dict,
+    facts: dict,
+    mode: str,
+    reason: str,
+    include_recommendations: bool,
+) -> str:
     event_ids = [e.get("id") for e in facts.get("events", []) if e.get("id")]
     git_ids = [g.get("id") for g in facts.get("git_commits", []) if g.get("id")]
     evt_ref = f"[FACT:{event_ids[0]}]" if event_ids else ""
@@ -193,14 +200,19 @@ def synthesize_without_llm(stats: dict, facts: dict, mode: str, reason: str) -> 
         "# Open Questions",
         "- Should full narrative generation be enabled for this environment?",
         "- Do we want stricter required fields for manual full-warp session closure events?",
-        "",
-        "# Recommended AGENT_PROMPT.md Changes",
-        "No automatic prompt change recommendations were generated in non-LLM mode.",
     ]
+    if include_recommendations:
+        lines.extend(
+            [
+                "",
+                "# Recommended AGENT_PROMPT.md Changes",
+                "No automatic prompt change recommendations were generated in non-LLM mode.",
+            ]
+        )
     return "\n".join(lines)
 
 
-def synthesize_narrative(
+def synthesize_analysis_pass(
     client,
     annotations: list[str],
     stats: dict,
@@ -234,7 +246,72 @@ CURRENT AGENT_PROMPT.md:
 AUTHORITATIVE FACTS JSON (machine-derived, source of truth):
 {json.dumps(facts, indent=2)}
 
-Produce a narrative with these sections (PASS {pass_label}):
+Produce an analysis draft with these sections (PASS {pass_label}):
+1. Session Summary
+2. What Agents Did
+3. What Worked
+4. What Didn't Work
+5. Decisions Made
+6. Open Questions
+
+Important:
+- Do NOT include a "Recommended AGENT_PROMPT.md Changes" section in this pass.
+- Prompt recommendation content is reserved for the final consolidated narrative only.
+
+Rules:
+- Every non-trivial factual claim MUST include at least one citation in the form [FACT:EVT-####] or [FACT:GIT-###].
+- If a claim cannot be supported by a fact id from the provided JSON, label it as [UNCERTAIN] and explain why.
+- Prefer omission over unsupported inference.
+- Do not invent event IDs, commit hashes, or outcomes.
+
+Be specific and honest.""",
+            }
+        ],
+    )
+    return response.content[0].text
+
+
+def synthesize_final_narrative(
+    client,
+    stats: dict,
+    git_log: str,
+    agent_prompt: str,
+    facts: dict,
+    analysis_a: str,
+    analysis_b: str,
+    uncertainty: dict,
+) -> str:
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4000,
+        messages=[
+            {
+                "role": "user",
+                "content": f"""You are producing the FINAL consolidated narrative for one development session.
+This final narrative is the only file that should contain prompt-recommendation guidance.
+
+SESSION STATS:
+{json.dumps(stats, indent=2)}
+
+GIT LOG (recent commits):
+{git_log}
+
+CURRENT AGENT_PROMPT.md:
+{agent_prompt}
+
+AUTHORITATIVE FACTS JSON:
+{json.dumps(facts, indent=2)}
+
+ANALYSIS PASS A (no recommendations):
+{analysis_a}
+
+ANALYSIS PASS B (no recommendations):
+{analysis_b}
+
+UNCERTAINTY REPORT:
+{json.dumps(uncertainty, indent=2)}
+
+Produce the FINAL narrative with these sections:
 1. Session Summary
 2. What Agents Did
 3. What Worked
@@ -244,8 +321,9 @@ Produce a narrative with these sections (PASS {pass_label}):
 7. Recommended AGENT_PROMPT.md Changes
 
 Rules:
+- Section 7 must appear only in this final narrative output.
 - Every non-trivial factual claim MUST include at least one citation in the form [FACT:EVT-####] or [FACT:GIT-###].
-- If a claim cannot be supported by a fact id from the provided JSON, label it as [UNCERTAIN] and explain why.
+- If a claim cannot be supported, mark it [UNCERTAIN] and explain why.
 - Prefer omission over unsupported inference.
 - Do not invent event IDs, commit hashes, or outcomes.
 
@@ -329,22 +407,47 @@ def main() -> None:
     session_date = datetime.now().strftime("%Y-%m-%d-%H%M")
     Path("outputs").mkdir(exist_ok=True)
     facts_file = f"outputs/{session_date}-facts.json"
-    narrative_file = f"outputs/{session_date}-narrative.md"
+    narrative_a_file = f"outputs/{session_date}-narrative-pass-a.md"
     narrative_b_file = f"outputs/{session_date}-narrative-pass-b.md"
+    narrative_file = f"outputs/{session_date}-narrative.md"
     uncertainty_file = f"outputs/{session_date}-uncertainty.json"
 
     Path(facts_file).write_text(json.dumps(facts, indent=2), encoding="utf-8")
 
     if llm_enabled:
-        print("Synthesizing narrative pass A...")
-        narrative_a = synthesize_narrative(client, all_annotations, stats, git_log, agent_prompt, facts, "A")
-        print("Synthesizing narrative pass B...")
-        narrative_b = synthesize_narrative(client, all_annotations, stats, git_log, agent_prompt, facts, "B")
+        print("Synthesizing analysis pass A...")
+        narrative_a = synthesize_analysis_pass(client, all_annotations, stats, git_log, agent_prompt, facts, "A")
+        print("Synthesizing analysis pass B...")
+        narrative_b = synthesize_analysis_pass(client, all_annotations, stats, git_log, agent_prompt, facts, "B")
         uncertainty = build_uncertainty_report(narrative_a, narrative_b, facts)
+        print("Synthesizing final consolidated narrative...")
+        final_narrative = synthesize_final_narrative(
+            client,
+            stats,
+            git_log,
+            agent_prompt,
+            facts,
+            narrative_a,
+            narrative_b,
+            uncertainty,
+        )
     else:
         print(f"LLM synthesis skipped ({llm_reason}); generating facts-only narrative.")
-        narrative_a = synthesize_without_llm(stats, facts, mode, llm_reason)
+        narrative_a = synthesize_without_llm(
+            stats,
+            facts,
+            mode,
+            llm_reason,
+            include_recommendations=False,
+        )
         narrative_b = f"# Pass B skipped\n\nReason: {llm_reason}\n\n" + narrative_a
+        final_narrative = synthesize_without_llm(
+            stats,
+            facts,
+            mode,
+            llm_reason,
+            include_recommendations=True,
+        )
         uncertainty = {
             "schema_version": 1,
             "llm_synthesis": "skipped",
@@ -355,17 +458,18 @@ def main() -> None:
                 "Set portable mode and ANTHROPIC_API_KEY to enable dual-pass narratives.",
             ],
         }
-
-    Path(narrative_file).write_text(narrative_a, encoding="utf-8")
+    Path(narrative_a_file).write_text(narrative_a, encoding="utf-8")
     Path(narrative_b_file).write_text(narrative_b, encoding="utf-8")
+    Path(narrative_file).write_text(final_narrative, encoding="utf-8")
     Path(uncertainty_file).write_text(json.dumps(uncertainty, indent=2), encoding="utf-8")
 
     print(f"\nFacts written to: {facts_file}")
-    print(f"Narrative (pass A) written to: {narrative_file}")
+    print(f"Narrative (pass A) written to: {narrative_a_file}")
     print(f"Narrative (pass B) written to: {narrative_b_file}")
+    print(f"Final narrative written to: {narrative_file}")
     print(f"Uncertainty report written to: {uncertainty_file}")
     print("\n--- PREVIEW ---")
-    print(narrative_a[:500] + "...")
+    print(final_narrative[:500] + "...")
 
 
 if __name__ == "__main__":
