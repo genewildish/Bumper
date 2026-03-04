@@ -12,6 +12,7 @@ Usage: python3 scripts/synthesize.py logs/[session].jsonl
 import json
 import os
 import re
+import hashlib
 import subprocess
 import sys
 from datetime import datetime
@@ -364,6 +365,98 @@ def build_uncertainty_report(narrative_a: str, narrative_b: str, facts: dict) ->
     }
 
 
+def normalize_recommendation_seed(text: str) -> str:
+    cleaned = re.sub(r"\[REC-[0-9a-f]{7}\]", "", text, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^\s*\d+[a-z]?\.\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = cleaned.replace("`", "")
+    cleaned = cleaned.replace("*", "")
+    cleaned = re.sub(r"\s+", " ", cleaned).strip().lower()
+    return cleaned
+
+
+def recommendation_id_from_seed(seed: str, used_ids: set[str]) -> str:
+    salt = 0
+    while True:
+        payload = seed if salt == 0 else f"{seed}:{salt}"
+        rec_id = f"REC-{hashlib.sha1(payload.encode('utf-8')).hexdigest()[:7]}"
+        if rec_id not in used_ids:
+            used_ids.add(rec_id)
+            return rec_id
+        salt += 1
+
+
+def assign_recommendation_ids(narrative: str) -> str:
+    lines = narrative.splitlines()
+    if not lines:
+        return narrative
+
+    section_idx = None
+    section_level = None
+    section_header_pattern = re.compile(
+        r"^(#{1,6})\s*7\.\s*Recommended AGENT_PROMPT\.md Changes\b",
+        re.IGNORECASE,
+    )
+    for i, line in enumerate(lines):
+        match = section_header_pattern.match(line)
+        if match:
+            section_idx = i
+            section_level = len(match.group(1))
+            break
+    if section_idx is None or section_level is None:
+        return narrative
+
+    section_end = len(lines)
+    heading_pattern = re.compile(r"^(#{1,6})\s+")
+    for i in range(section_idx + 1, len(lines)):
+        heading = heading_pattern.match(lines[i])
+        if heading and len(heading.group(1)) <= section_level:
+            section_end = i
+            break
+
+    used_ids: set[str] = set()
+    added_any = False
+    existing_id_pattern = re.compile(r"\[?(REC-[0-9a-f]{7})\]?", re.IGNORECASE)
+    subheading_pattern = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+
+    for i in range(section_idx + 1, section_end):
+        match = subheading_pattern.match(lines[i])
+        if not match:
+            continue
+        if len(match.group(1)) <= section_level:
+            continue
+        heading_text = match.group(2).strip()
+        existing = existing_id_pattern.search(heading_text)
+        if existing:
+            used_ids.add(existing.group(1).upper())
+            continue
+        seed = normalize_recommendation_seed(heading_text)
+        if not seed:
+            continue
+        rec_id = recommendation_id_from_seed(seed, used_ids)
+        lines[i] = f"{match.group(1)} [{rec_id}] {heading_text}"
+        added_any = True
+
+    if not added_any:
+        list_item_pattern = re.compile(r"^(\s*)(\d+\.)\s+(.+?)\s*$")
+        for i in range(section_idx + 1, section_end):
+            match = list_item_pattern.match(lines[i])
+            if not match:
+                continue
+            item_text = match.group(3).strip()
+            existing = existing_id_pattern.search(item_text)
+            if existing:
+                used_ids.add(existing.group(1).upper())
+                continue
+            seed = normalize_recommendation_seed(item_text)
+            if not seed:
+                continue
+            rec_id = recommendation_id_from_seed(seed, used_ids)
+            lines[i] = f"{match.group(1)}{match.group(2)} [{rec_id}] {item_text}"
+            added_any = True
+
+    return "\n".join(lines)
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: python3 scripts/synthesize.py logs/[session].jsonl")
@@ -458,6 +551,7 @@ def main() -> None:
                 "Set portable mode and ANTHROPIC_API_KEY to enable dual-pass narratives.",
             ],
         }
+    final_narrative = assign_recommendation_ids(final_narrative)
     Path(narrative_a_file).write_text(narrative_a, encoding="utf-8")
     Path(narrative_b_file).write_text(narrative_b, encoding="utf-8")
     Path(narrative_file).write_text(final_narrative, encoding="utf-8")
