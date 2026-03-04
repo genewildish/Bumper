@@ -49,6 +49,27 @@ def get_mode() -> str:
     except Exception:
         return "portable"
 
+def infer_log_mode(events: list[dict]) -> str:
+    inferred_modes: set[str] = set()
+    for event in events:
+        event_type = event.get("event", "")
+        data = event.get("data")
+
+        if isinstance(data, dict) and data.get("mode") in {"portable", "full-warp"}:
+            inferred_modes.add(data["mode"])
+
+        if event_type.startswith("warp_session_"):
+            inferred_modes.add("full-warp")
+
+        if event_type in {"agent_start", "agent_done", "agent_error", "output"}:
+            inferred_modes.add("portable")
+
+    if not inferred_modes:
+        return "unknown"
+    if len(inferred_modes) == 1:
+        return next(iter(inferred_modes))
+    return "mixed"
+
 
 def get_git_log() -> str:
     try:
@@ -463,21 +484,33 @@ def main() -> None:
         sys.exit(1)
 
     log_file = sys.argv[1]
-    mode = get_mode()
+    configured_mode = get_mode()
     has_api_key = bool(os.getenv("ANTHROPIC_API_KEY"))
-    llm_enabled = mode == "portable" and anthropic is not None and has_api_key
+
+    print(f"Loading events from {log_file}...")
+    events = load_events(log_file)
+    log_mode = infer_log_mode(events)
+    mode = log_mode if log_mode in {"portable", "full-warp"} else configured_mode
+
+    if log_mode in {"portable", "full-warp"} and configured_mode != log_mode:
+        print(
+            f"WARNING: Mode mismatch detected (configured='{configured_mode}', log='{log_mode}'). "
+            "Continuing with mode-agnostic LLM eligibility."
+        )
+    elif log_mode == "mixed":
+        print(
+            "WARNING: Mixed mode signals detected in the log (both portable and full-warp markers found). "
+            "Continuing with mode-agnostic LLM eligibility."
+        )
+
+    llm_enabled = anthropic is not None and has_api_key
     llm_reason = ""
     if not llm_enabled:
-        if mode != "portable":
-            llm_reason = f"mode is '{mode}'"
-        elif anthropic is None:
+        if anthropic is None:
             llm_reason = "anthropic package is unavailable"
         else:
             llm_reason = "ANTHROPIC_API_KEY is missing"
     client = anthropic.Anthropic() if llm_enabled else None
-
-    print(f"Loading events from {log_file}...")
-    events = load_events(log_file)
     stats = get_session_stats(events)
     git_log = get_git_log()
     git_commits = get_git_log_structured()
@@ -548,7 +581,7 @@ def main() -> None:
             "mode": mode,
             "notes": [
                 "Use facts file and raw logs for manual interpretation.",
-                "Set portable mode and ANTHROPIC_API_KEY to enable dual-pass narratives.",
+                "Set ANTHROPIC_API_KEY and ensure the anthropic package is available to enable dual-pass narratives.",
             ],
         }
     final_narrative = assign_recommendation_ids(final_narrative)
