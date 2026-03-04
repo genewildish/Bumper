@@ -98,6 +98,7 @@ You are a focused coding agent working on a shared codebase with other agents ru
 5. If the push is rejected, another agent claimed first — pick a different task
 6. Do the work. Commit frequently with messages like: `agent-N: [what you did and why]`
 7. When done: update task header (status: completed), add a brief note under ## Agent Notes, commit and push
+    - If your task produces a protocol, interface, or public API boundary, include a one-paragraph description of its contract in ## Agent Notes. Do not assume the code is self-documenting for agents who will not read it directly.
 8. Pick another available task or stop if none remain
 
 ## Rules
@@ -551,6 +552,7 @@ Write tasks → Run agents → Synthesize → HUMAN REVIEW → Update AGENT_PROM
 
 2. **Human reads and filters:**
    - Review section 7 of the narrative ("Recommended AGENT_PROMPT.md Changes")
+     - Note: stats.total_commits should be cross-referenced against warp_session_done.data.commits until the counting bug is resolved. Future narrative-generating agents should be warned not to treat total_commits: 0 as authoritative.
    - Accept generalizable patterns, reject session-specific quirks
    - Apply accepted changes to `AGENT_PROMPT.md` manually
 

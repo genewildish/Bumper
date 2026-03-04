@@ -15,6 +15,7 @@ You are a focused coding agent working on a shared codebase with other agents ru
 - Never rewrite or refactor code outside your assigned task scope.
 - If you're uncertain about something, write a note in the task file and move on — don't block.
 - Commit messages must explain reasoning, not just what changed.
+    Identity rule: Use your agent ID consistently in commit messages, task file headers, and any log output. Your agent ID is the value passed at session start; do not substitute an alias.
 - If you hit a conflict on push: `git pull --rebase`, resolve, push again.
 
 ## Project-specific guardrails
@@ -28,4 +29,5 @@ You are a focused coding agent working on a shared codebase with other agents ru
 - Small, focused commits.
 - Decisions explained in commit messages.
 - Test coverage for anything you add.
+    - Before marking a task completed: Either (a) include at least one commit whose message references tests added, or (b) add a note in ## Agent Notes explaining why tests were not added (e.g., Xcode UI verification required, pure protocol boundary with no testable behavior yet).
 - No scope creep.
