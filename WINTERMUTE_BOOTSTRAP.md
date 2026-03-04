@@ -379,11 +379,14 @@ Before running your first session:
 # After all agents finish
 python scripts/synthesize.py logs/[session].jsonl
 
-# Review the narrative, then optionally:
-# - Update AGENT_PROMPT.md based on "Recommended Changes" section
-# - Update WARP.md with new project state
-# - Write new task files for next session
-# - Commit everything including outputs/
+# HUMAN REVIEW REQUIRED - do not skip this step:
+# 1. Read the narrative in outputs/<session>-narrative.md
+# 2. Review section 7 ("Recommended AGENT_PROMPT.md Changes")
+# 3. Decide which recommendations to accept (some may be session-specific overfitting)
+# 4. Manually edit AGENT_PROMPT.md based on accepted recommendations
+# 5. Update WARP.md "Current State" section with completed tasks and new architectural facts
+# 6. Write new task files for next session if needed
+# 7. Commit everything including outputs/ to preserve the narrative in git history
 ```
 
 ---
@@ -403,6 +406,14 @@ python scripts/synthesize.py logs/[session].jsonl
 - No Docker (not needed for personal projects)
 - No coordinator.py (assign tasks manually by opening panes)
 - No automatic AGENT_PROMPT.md updates (human reviews synthesis and edits manually)
+
+**Why human review matters:**
+The synthesis narrative includes recommended prompt changes based on one session. Some recommendations are valuable patterns; others are overfitting to session-specific quirks. A human must filter:
+- Accept: patterns that will improve future sessions
+- Reject: session-specific fixes that don't generalize
+- Defer: changes that need more data from multiple sessions
+
+Skipping human review defeats the feedback loop. The narrative is not automatically applied — it's input for human judgment.
 
 ---
 
@@ -528,7 +539,34 @@ This is where the compounding value starts — after 10+ sessions you have empir
 ## The Feedback Loop
 
 ```
-Write tasks → Run agents → Read narrative → Update AGENT_PROMPT.md → Write tasks → ...
+Write tasks → Run agents → Synthesize → HUMAN REVIEW → Update AGENT_PROMPT.md → Update WARP.md → Write tasks → ...
 ```
 
-Each session makes the next one better. The narrative is the artifact that makes this possible. Protect it — commit it, read it, act on it.
+### How the loop works:
+
+1. **Synthesis produces three artifacts:**
+   - `outputs/<session>-narrative.md` — what happened, what worked, what didn't, recommendations
+   - `outputs/<session>-facts.json` — authoritative machine-derived facts (events, commits)
+   - `outputs/<session>-uncertainty.json` — dual-pass citation diff and confidence signals
+
+2. **Human reads and filters:**
+   - Review section 7 of the narrative ("Recommended AGENT_PROMPT.md Changes")
+   - Accept generalizable patterns, reject session-specific quirks
+   - Apply accepted changes to `AGENT_PROMPT.md` manually
+
+3. **Update project state:**
+   - Mark completed tasks in `WARP.md` "Current State"
+   - Document new architectural facts (protocols, boundaries, integrations)
+   - Do NOT copy narrative lessons into WARP.md — they stay in `outputs/` and filter into `AGENT_PROMPT.md`
+
+4. **Commit everything:**
+   - Narratives in `outputs/` preserve the long-term record
+   - Updated `AGENT_PROMPT.md` encodes accepted patterns
+   - Updated `WARP.md` reflects current project reality
+
+5. **Next session reads the updated context automatically:**
+   - Agents see the improved `AGENT_PROMPT.md`
+   - Agents see current state in `WARP.md`
+   - The loop compounds: each session makes the next one better
+
+**Critical rule:** Never skip human review. Auto-applying narrative recommendations will cause the prompt to overfit to session noise and degrade over time. The human filters signal from noise.
