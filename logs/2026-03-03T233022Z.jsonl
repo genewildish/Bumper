@@ -1,0 +1,2 @@
+{"event":"warp_session_start","agent":"warp-manual-78566","task":"TASK-001","session":"2026-03-03T23:30:22Z","ts":1772580622,"data":{"mode":"full-warp"}}
+{"event":"warp_session_done","agent":"warp-manual","task":"TASK-001","session":"2026-03-03T233022Z","ts":1772580765,"data":{"commits":4,"mode":"full-warp"}}
