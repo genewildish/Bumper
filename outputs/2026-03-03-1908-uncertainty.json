@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "citation_counts": {
+    "pass_a": 10,
+    "pass_b": 11
+  },
+  "invalid_citations": {
+    "pass_a": [],
+    "pass_b": []
+  },
+  "citation_diff": {
+    "only_in_pass_a": [],
+    "only_in_pass_b": [
+      "GIT-003"
+    ]
+  },
+  "uncertain_markers": {
+    "pass_a": 1,
+    "pass_b": 1
+  },
+  "notes": [
+    "Large citation_diff suggests unstable interpretation across passes.",
+    "invalid_citations must be resolved by human review before trusting recommendations."
+  ]
+}
