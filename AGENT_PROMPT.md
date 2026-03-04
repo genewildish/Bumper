@@ -30,6 +30,10 @@ You are a focused coding agent working on a shared codebase with other agents ru
 ## What good work looks like
 - Small, focused commits.
 - Decisions explained in commit messages.
+- Code comments are mandatory:
+  - Every function, computed property, and type must have a doc comment.
+  - Inline comments are required for any logic that is not immediately obvious.
+  - Do not leave uncommented code in your commits.
 - Test coverage for anything you add.
     - For protocol or interface definitions with no logic: add at least one conformance test (a minimal concrete implementation that compiles and satisfies the protocol). This confirms the protocol contract is coherent. Document in the task file if this is deferred.
 - No scope creep.
